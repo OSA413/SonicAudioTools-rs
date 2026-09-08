@@ -1,0 +1,8 @@
+[workspace]
+members = [
+    "src/SonicAudioLib-rs",
+]
+resolver = "3"
+
+[workspace.lints.clippy]
+unwrap_used = "deny"
