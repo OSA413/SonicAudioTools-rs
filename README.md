@@ -1,6 +1,13 @@
-# Sonic Audio Tools
+# Sonic Audio Tools, a partial Rust rewrite
 
 A set of tools to modify CRIWARE file formats.
+
+## What is left behind / will not be implemented in the Rust rewrite
+
+* probably the compression of CPK files, since in the original code the reading was only implemented, but I want to write the files as well.
+* parallel processing of CSB files since it would still hit the IO bottleneck.
+* file alignment in CPK since it wasn't implemented in the original code.
+* also the masking seems to be unused in CPK (always `false`)
 
 ## Disclaimer
 
