@@ -3,13 +3,6 @@
 version = 4
 
 [[package]]
-name = "SonicAudioLib-rs"
-version = "0.1.0"
-dependencies = [
- "common_binary",
-]
-
-[[package]]
 name = "common_binary"
 version = "0.0.0"
 dependencies = [
@@ -87,6 +80,13 @@ dependencies = [
  "serde",
  "serde_core",
  "zmij",
+]
+
+[[package]]
+name = "sonic-audio-lib-rs"
+version = "0.1.0"
+dependencies = [
+ "common_binary",
 ]
 
 [[package]]

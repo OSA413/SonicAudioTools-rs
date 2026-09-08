@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "src/SonicAudioLib-rs",
+    "src/sonic-audio-lib-rs",
 ]
 resolver = "3"
 

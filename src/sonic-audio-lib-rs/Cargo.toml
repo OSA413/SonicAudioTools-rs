@@ -1,0 +1,15 @@
+[package]
+name = "sonic-audio-lib-rs"
+description = "TODO"
+version = "0.1.0"
+edition = "2024"
+authors = ["Oleg \"OSA413\" Sokolov", "Skyth"]
+repository = "https://github.com/OSA413/SonicAudioTools-rs"
+homepage = "https://github.com/OSA413/SonicAudioTools-rs"
+license = "MIT"
+
+[dependencies]
+common_binary = { path = "../../src_tools/src/common/binary" }
+
+[lints]
+workspace = true
