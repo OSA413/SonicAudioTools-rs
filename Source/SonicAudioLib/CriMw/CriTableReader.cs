@@ -139,8 +139,10 @@ namespace SonicAudioLib.CriMw
             uint offset = 0;
             for (ushort i = 0; i < header.FieldCount; i++)
             {
-                CriTableField field = new CriTableField();
-                field.Flag = (CriFieldFlag)DataStream.ReadByte(source);
+                CriTableField field = new CriTableField
+                {
+                    Flag = (CriFieldFlag)DataStream.ReadByte(source)
+                };
 
                 if (field.Flag.HasFlag(CriFieldFlag.Name))
                 {

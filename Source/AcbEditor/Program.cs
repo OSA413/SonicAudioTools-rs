@@ -287,9 +287,11 @@ namespace AcbEditor
 
                         if (cpkMode)
                         {
-                            CriCpkEntry entry = new CriCpkEntry();
-                            entry.FilePath = new FileInfo(inputName);
-                            entry.Id = id;
+                            CriCpkEntry entry = new CriCpkEntry
+                            {
+                                FilePath = new FileInfo(inputName),
+                                Id = id
+                            };
 
                             if (streaming)
                             {
@@ -304,9 +306,11 @@ namespace AcbEditor
 
                         else
                         {
-                            CriAfs2Entry entry = new CriAfs2Entry();
-                            entry.FilePath = new FileInfo(inputName);
-                            entry.Id = id;
+                            CriAfs2Entry entry = new CriAfs2Entry
+                            {
+                                FilePath = new FileInfo(inputName),
+                                Id = id
+                            };
 
                             if (streaming)
                             {

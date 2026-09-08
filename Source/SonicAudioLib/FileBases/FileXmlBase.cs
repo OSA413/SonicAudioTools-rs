@@ -26,8 +26,10 @@ namespace SonicAudioLib.FileBases
 
         public virtual void SaveXml(string destinationFileName)
         {
-            var settings = new XmlWriterSettings();
-            settings.Indent = true;
+            var settings = new XmlWriterSettings
+            {
+                Indent = true
+            };
 
             using (XmlWriter writer = XmlWriter.Create(destinationFileName, settings))
             {

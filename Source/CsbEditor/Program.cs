@@ -212,12 +212,14 @@ namespace CsbEditor
 
                         if (streaming)
                         {
-                            CriCpkEntry entry = new CriCpkEntry();
-                            entry.Name = Path.GetFileName(sdlName);
-                            entry.DirectoryName = Path.GetDirectoryName(sdlName);
-                            entry.Id = (uint)cpkArchive.Count;
-                            entry.FilePath = new FileInfo(Path.GetTempFileName());
-                            junks.Add(entry.FilePath);
+                        CriCpkEntry entry = new CriCpkEntry
+                        {
+                            Name = Path.GetFileName(sdlName),
+                            DirectoryName = Path.GetDirectoryName(sdlName),
+                            Id = (uint)cpkArchive.Count,
+                            FilePath = new FileInfo(Path.GetTempFileName())
+                        };
+                        junks.Add(entry.FilePath);
 
                             cpkArchive.Add(entry);
                             aaxArchive.Save(entry.FilePath.FullName, Settings.Default.BufferSize);

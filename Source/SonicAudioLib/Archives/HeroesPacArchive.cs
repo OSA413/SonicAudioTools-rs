@@ -28,10 +28,11 @@ namespace SonicAudioLib.Archives
             HeroesPacEntry previousEntry = null;
             for (uint i = 0; i < entryCount; i++)
             {
-                HeroesPacEntry pacEntry = new HeroesPacEntry();
-
-                pacEntry.Id = DataStream.ReadUInt32(source);
-                pacEntry.Position = vldPoolPosition + DataStream.ReadUInt32(source);
+                HeroesPacEntry pacEntry = new HeroesPacEntry
+                {
+                    Id = DataStream.ReadUInt32(source),
+                    Position = vldPoolPosition + DataStream.ReadUInt32(source)
+                };
 
                 if (previousEntry != null)
                 {

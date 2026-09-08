@@ -128,9 +128,11 @@ namespace CsbBuilder
         {
             foreach (BuilderCueNode cueNode in project.CueNodes)
             {
-                TreeNode treeNode = new TreeNode();
-                treeNode.ContextMenuStrip = cueReferenceMenu;
-                treeNode.Name = cueNode.Name;
+                TreeNode treeNode = new TreeNode
+                {
+                    ContextMenuStrip = cueReferenceMenu,
+                    Name = cueNode.Name
+                };
                 treeNode.Text = treeNode.Name;
                 treeNode.Tag = cueNode;
                 cueTree.Nodes.Add(treeNode);
@@ -192,9 +194,11 @@ namespace CsbBuilder
 
             foreach (BuilderVoiceLimitGroupNode voiceLimitGroupNode in project.VoiceLimitGroupNodes)
             {
-                TreeNode treeNode = new TreeNode();
-                treeNode.ContextMenuStrip = nodeMenu;
-                treeNode.Name = voiceLimitGroupNode.Name;
+                TreeNode treeNode = new TreeNode
+                {
+                    ContextMenuStrip = nodeMenu,
+                    Name = voiceLimitGroupNode.Name
+                };
                 treeNode.Text = treeNode.Name;
                 treeNode.Tag = voiceLimitGroupNode;
                 voiceLimitGroupTree.Nodes.Add(treeNode);
@@ -297,8 +301,10 @@ namespace CsbBuilder
             TreeNode treeNode = nodeIndex == -1 ? collection.Add($"{parentName}_{index}") : collection.Insert(nodeIndex, $"{parentName}_{index}");
             treeNode.Name = treeNode.Text;
             treeNode.ContextMenuStrip = cueReferenceMenu;
-            BuilderCueNode cueNode = new BuilderCueNode();
-            cueNode.Name = treeNode.FullPath;
+            BuilderCueNode cueNode = new BuilderCueNode
+            {
+                Name = treeNode.FullPath
+            };
 
             if (project.CueNodes.Count > 0)
             {
@@ -366,9 +372,11 @@ namespace CsbBuilder
             TreeNode treeNode = nodeIndex == -1 ? collection.Add($"{parentName}_{index}") : collection.Insert(nodeIndex, $"{parentName}_{index}");
             treeNode.Name = treeNode.Text;
             treeNode.ContextMenuStrip = trackMenu;
-            BuilderSynthNode synthNode = new BuilderSynthNode();
-            synthNode.Type = BuilderSynthType.WithChildren;
-            synthNode.Name = treeNode.FullPath;
+            BuilderSynthNode synthNode = new BuilderSynthNode
+            {
+                Type = BuilderSynthType.WithChildren,
+                Name = treeNode.FullPath
+            };
             treeNode.Tag = synthNode;
             project.SynthNodes.Add(synthNode);
 
@@ -402,8 +410,10 @@ namespace CsbBuilder
             treeNode.ContextMenuStrip = trackItemMenu;
             treeNode.ImageIndex = 3;
             treeNode.SelectedImageIndex = 3;
-            BuilderSynthNode synthNode = new BuilderSynthNode();
-            synthNode.Name = treeNode.FullPath;
+            BuilderSynthNode synthNode = new BuilderSynthNode
+            {
+                Name = treeNode.FullPath
+            };
             treeNode.Tag = synthNode;
             project.SynthNodes.Add(synthNode);
 
@@ -435,8 +445,10 @@ namespace CsbBuilder
             TreeNode treeNode = nodeIndex == -1 ? collection.Add($"{parentName}_{index}") : collection.Insert(nodeIndex, $"{parentName}_{index}");
             treeNode.Name = treeNode.Text;
             treeNode.ContextMenuStrip = soundElementMenu;
-            BuilderSoundElementNode soundElementNode = new BuilderSoundElementNode();
-            soundElementNode.Name = treeNode.FullPath;
+            BuilderSoundElementNode soundElementNode = new BuilderSoundElementNode
+            {
+                Name = treeNode.FullPath
+            };
             treeNode.Tag = soundElementNode;
             treeNode.ImageIndex = 3;
             treeNode.SelectedImageIndex = 3;
@@ -487,8 +499,10 @@ namespace CsbBuilder
             TreeNode treeNode = nodeIndex == -1 ? collection.Add($"{parentName}_{index}") : collection.Insert(nodeIndex, $"{parentName}_{index}");
             treeNode.Name = treeNode.Text;
             treeNode.ContextMenuStrip = nodeMenu;
-            BuilderVoiceLimitGroupNode voiceLimitGroup = new BuilderVoiceLimitGroupNode();
-            voiceLimitGroup.Name = treeNode.FullPath;
+            BuilderVoiceLimitGroupNode voiceLimitGroup = new BuilderVoiceLimitGroupNode
+            {
+                Name = treeNode.FullPath
+            };
             treeNode.Tag = voiceLimitGroup;
             project.VoiceLimitGroupNodes.Add(voiceLimitGroup);
 
@@ -1019,8 +1033,10 @@ namespace CsbBuilder
             {
                 if (openCsbFile.ShowDialog() == DialogResult.OK)
                 {
-                    CsbProject csbProject = new CsbProject();
-                    csbProject.Directory = project.Directory;
+                    CsbProject csbProject = new CsbProject
+                    {
+                        Directory = project.Directory
+                    };
                     CsbImporter.Import(openCsbFile.FileName, csbProject);
 
                     project.CueNodes.AddRange(csbProject.CueNodes);
@@ -2352,10 +2368,12 @@ namespace CsbBuilder
                     {
                         if (saveFileDialog.ShowDialog(this) == DialogResult.OK)
                         {
-                            DataExtractor extractor = new DataExtractor();
-                            extractor.EnableThreading = Settings.EnableThreading;
-                            extractor.MaxThreads = Settings.MaxThreads;
-                            extractor.BufferSize = Settings.BufferSize;
+                            DataExtractor extractor = new DataExtractor
+                            {
+                                EnableThreading = Settings.EnableThreading,
+                                MaxThreads = Settings.MaxThreads,
+                                BufferSize = Settings.BufferSize
+                            };
 
                             foreach (string fileName in openFileDialog.FileNames)
                             {

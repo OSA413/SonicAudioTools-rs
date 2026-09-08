@@ -162,14 +162,16 @@ namespace SonicAudioLib.Archives
                     {
                         while (tocReader.Read())
                         {
-                            CriCpkEntry entry = new CriCpkEntry();
-                            entry.DirectoryName = tocReader.GetString("DirName");
-                            entry.Name = tocReader.GetString("FileName");
-                            entry.Length = tocReader.GetUInt32("FileSize");
-                            entry.Position = (long)tocReader.GetUInt64("FileOffset");
-                            entry.Id = isLatestVersion ? tocReader.GetUInt32("ID") : tocReader.GetUInt32("Info");
-                            entry.Comment = tocReader.GetString("UserString");
-                            entry.UncompressedLength = tocReader.GetUInt32("ExtractSize");
+                            CriCpkEntry entry = new CriCpkEntry
+                            {
+                                DirectoryName = tocReader.GetString("DirName"),
+                                Name = tocReader.GetString("FileName"),
+                                Length = tocReader.GetUInt32("FileSize"),
+                                Position = (long)tocReader.GetUInt64("FileOffset"),
+                                Id = isLatestVersion ? tocReader.GetUInt32("ID") : tocReader.GetUInt32("Info"),
+                                Comment = tocReader.GetString("UserString"),
+                                UncompressedLength = tocReader.GetUInt32("ExtractSize")
+                            };
                             entry.IsCompressed = entry.Length != entry.UncompressedLength;
 
                             if (contentPosition < tocPosition)
@@ -215,10 +217,12 @@ namespace SonicAudioLib.Archives
                                 {
                                     while (dataReader.Read())
                                     {
-                                        CriCpkEntry entry = new CriCpkEntry();
-                                        entry.Id = dataReader.GetUInt16("ID");
-                                        entry.Length = dataReader.GetUInt16("FileSize");
-                                        entry.UncompressedLength = dataReader.GetUInt16("ExtractSize");
+                                        CriCpkEntry entry = new CriCpkEntry
+                                        {
+                                            Id = dataReader.GetUInt16("ID"),
+                                            Length = dataReader.GetUInt16("FileSize"),
+                                            UncompressedLength = dataReader.GetUInt16("ExtractSize")
+                                        };
                                         entry.IsCompressed = entry.Length != entry.UncompressedLength;
 
                                         entries.Add(entry);
@@ -232,10 +236,12 @@ namespace SonicAudioLib.Archives
                                 {
                                     while (dataReader.Read())
                                     {
-                                        CriCpkEntry entry = new CriCpkEntry();
-                                        entry.Id = dataReader.GetUInt16("ID");
-                                        entry.Length = dataReader.GetUInt32("FileSize");
-                                        entry.UncompressedLength = dataReader.GetUInt32("ExtractSize");
+                                        CriCpkEntry entry = new CriCpkEntry
+                                        {
+                                            Id = dataReader.GetUInt16("ID"),
+                                            Length = dataReader.GetUInt32("FileSize"),
+                                            UncompressedLength = dataReader.GetUInt32("ExtractSize")
+                                        };
                                         entry.IsCompressed = entry.Length != entry.UncompressedLength;
 
                                         entries.Add(entry);

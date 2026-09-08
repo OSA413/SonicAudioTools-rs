@@ -75,10 +75,12 @@ namespace SonicAudioLib.Archives
                 {
                     while (reader.Read())
                     {
-                        CriAaxEntry entry = new CriAaxEntry();
-                        entry.Flag = (CriAaxEntryFlag)reader.GetByte("lpflg");
-                        entry.Position = reader.GetPosition("data");
-                        entry.Length = reader.GetLength("data");
+                        CriAaxEntry entry = new CriAaxEntry
+                        {
+                            Flag = (CriAaxEntryFlag)reader.GetByte("lpflg"),
+                            Position = reader.GetPosition("data"),
+                            Length = reader.GetLength("data")
+                        };
                         entries.Add(entry);
                     }
                 }

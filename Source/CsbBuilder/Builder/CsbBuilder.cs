@@ -211,12 +211,14 @@ namespace CsbBuilder.Builder
 
                 if (soundElementNode.Streaming)
                 {
-                    CriCpkEntry entry = new CriCpkEntry();
-                    entry.Name = Path.GetFileName(soundElementNode.Name);
-                    entry.DirectoryName = Path.GetDirectoryName(soundElementNode.Name);
-                    entry.Id = (uint)cpkArchive.Count;
-                    entry.UpdateDateTime = DateTime.Now;
-                    entry.FilePath = new FileInfo(Path.GetTempFileName());
+                    CriCpkEntry entry = new CriCpkEntry
+                    {
+                        Name = Path.GetFileName(soundElementNode.Name),
+                        DirectoryName = Path.GetDirectoryName(soundElementNode.Name),
+                        Id = (uint)cpkArchive.Count,
+                        UpdateDateTime = DateTime.Now,
+                        FilePath = new FileInfo(Path.GetTempFileName())
+                    };
                     cpkArchive.Add(entry);
 
                     aaxArchive.Save(entry.FilePath.FullName);

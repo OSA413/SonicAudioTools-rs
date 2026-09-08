@@ -52,11 +52,13 @@ namespace CsbBuilder
             TreeNode newNode = null;
             if (!cancel)
             {
-                newNode = new TreeNode();
-                newNode.Name = treeNode.Name;
-                newNode.Text = treeNode.Text;
-                newNode.ImageIndex = treeNode.ImageIndex;
-                newNode.SelectedImageIndex = treeNode.SelectedImageIndex;
+                newNode = new TreeNode
+                {
+                    Name = treeNode.Name,
+                    Text = treeNode.Text,
+                    ImageIndex = treeNode.ImageIndex,
+                    SelectedImageIndex = treeNode.SelectedImageIndex
+                };
 
                 if (parentNode != null)
                 {

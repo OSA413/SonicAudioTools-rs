@@ -22,10 +22,12 @@ namespace CsbBuilder.Importer
     {
         public static void Import(string path, CsbProject project)
         {
-            var extractor = new DataExtractor();
-            extractor.BufferSize = MainForm.Settings.BufferSize;
-            extractor.EnableThreading = MainForm.Settings.EnableThreading;
-            extractor.MaxThreads = MainForm.Settings.MaxThreads;
+            var extractor = new DataExtractor
+            {
+                BufferSize = MainForm.Settings.BufferSize,
+                EnableThreading = MainForm.Settings.EnableThreading,
+                MaxThreads = MainForm.Settings.MaxThreads
+            };
 
             // Find the CPK first
             string cpkPath = Path.ChangeExtension(path, "cpk");
@@ -74,12 +76,14 @@ namespace CsbBuilder.Importer
 
             foreach (SerializationSoundElementTable soundElementTable in soundElementTables)
             {
-                BuilderSoundElementNode soundElementNode = new BuilderSoundElementNode();
-                soundElementNode.Name = soundElementTable.Name;
-                soundElementNode.ChannelCount = soundElementTable.NumberChannels;
-                soundElementNode.SampleRate = soundElementTable.SoundFrequency;
-                soundElementNode.Streaming = soundElementTable.Streaming;
-                soundElementNode.SampleCount = soundElementTable.NumberSamples;
+                BuilderSoundElementNode soundElementNode = new BuilderSoundElementNode
+                {
+                    Name = soundElementTable.Name,
+                    ChannelCount = soundElementTable.NumberChannels,
+                    SampleRate = soundElementTable.SoundFrequency,
+                    Streaming = soundElementTable.Streaming,
+                    SampleCount = soundElementTable.NumberSamples
+                };
 
                 CriAaxArchive aaxArchive = new CriAaxArchive();
 
@@ -146,32 +150,38 @@ namespace CsbBuilder.Importer
             // Deserialize Aisac tables
             foreach (SerializationAisacTable aisacTable in aisacTables)
             {
-                BuilderAisacNode aisacNode = new BuilderAisacNode();
-                aisacNode.Name = aisacTable.PathName;
-                aisacNode.AisacName = aisacTable.Name;
-                aisacNode.Type = aisacTable.Type;
-                aisacNode.RandomRange = aisacTable.RandomRange;
+                BuilderAisacNode aisacNode = new BuilderAisacNode
+                {
+                    Name = aisacTable.PathName,
+                    AisacName = aisacTable.Name,
+                    Type = aisacTable.Type,
+                    RandomRange = aisacTable.RandomRange
+                };
 
                 // Deserialize the graphs
                 List<SerializationAisacGraphTable> graphTables = CriTableSerializer.Deserialize<SerializationAisacGraphTable>(aisacTable.Graph);
                 foreach (SerializationAisacGraphTable graphTable in graphTables)
                 {
-                    BuilderAisacGraphNode graphNode = new BuilderAisacGraphNode();
-                    graphNode.Name = $"Graph{aisacNode.Graphs.Count}";
-                    graphNode.Type = graphTable.Type;
-                    graphNode.MaximumX = graphTable.InMax;
-                    graphNode.MinimumX = graphTable.InMin;
-                    graphNode.MaximumY = graphTable.OutMax;
-                    graphNode.MinimumY = graphTable.OutMin;
+                    BuilderAisacGraphNode graphNode = new BuilderAisacGraphNode
+                    {
+                        Name = $"Graph{aisacNode.Graphs.Count}",
+                        Type = graphTable.Type,
+                        MaximumX = graphTable.InMax,
+                        MinimumX = graphTable.InMin,
+                        MaximumY = graphTable.OutMax,
+                        MinimumY = graphTable.OutMin
+                    };
 
                     // Deserialize the points
                     List<SerializationAisacPointTable> pointTables = CriTableSerializer.Deserialize<SerializationAisacPointTable>(graphTable.Points);
                     foreach (SerializationAisacPointTable pointTable in pointTables)
                     {
-                        BuilderAisacPointNode pointNode = new BuilderAisacPointNode();
-                        pointNode.Name = $"Point{graphNode.Points.Count}";
-                        pointNode.X = pointTable.In;
-                        pointNode.Y = pointTable.Out;
+                        BuilderAisacPointNode pointNode = new BuilderAisacPointNode
+                        {
+                            Name = $"Point{graphNode.Points.Count}",
+                            X = pointTable.In,
+                            Y = pointTable.Out
+                        };
                         graphNode.Points.Add(pointNode);
                     }
 
@@ -184,93 +194,95 @@ namespace CsbBuilder.Importer
             // Deserialize Synth tables
             foreach (SerializationSynthTable synthTable in synthTables)
             {
-                BuilderSynthNode synthNode = new BuilderSynthNode();
-                synthNode.Name = synthTable.SynthName;
-                synthNode.Type = (BuilderSynthType)synthTable.SynthType;
-                synthNode.PlaybackType = (BuilderSynthPlaybackType)synthTable.ComplexType;
-                synthNode.Volume = synthTable.Volume;
-                synthNode.Pitch = synthTable.Pitch;
-                synthNode.DelayTime = synthTable.DelayTime;
-                synthNode.SControl = synthTable.SControl;
-                synthNode.EgDelay = synthTable.EgDelay;
-                synthNode.EgAttack = synthTable.EgAttack;
-                synthNode.EgHold = synthTable.EgHold;
-                synthNode.EgDecay = synthTable.EgDecay;
-                synthNode.EgRelease = synthTable.EgRelease;
-                synthNode.EgSustain = synthTable.EgSustain;
-                synthNode.FilterType = synthTable.FType;
-                synthNode.FilterCutoff1 = synthTable.FCof1;
-                synthNode.FilterCutoff2 = synthTable.FCof2;
-                synthNode.FilterReso = synthTable.FReso;
-                synthNode.FilterReleaseOffset = synthTable.FReleaseOffset;
-                synthNode.DryOName = synthTable.DryOName;
-                synthNode.Mtxrtr = synthTable.Mtxrtr;
-                synthNode.Dry0 = synthTable.Dry0;
-                synthNode.Dry1 = synthTable.Dry1;
-                synthNode.Dry2 = synthTable.Dry2;
-                synthNode.Dry3 = synthTable.Dry3;
-                synthNode.Dry4 = synthTable.Dry4;
-                synthNode.Dry5 = synthTable.Dry5;
-                synthNode.Dry6 = synthTable.Dry6;
-                synthNode.Dry7 = synthTable.Dry7;
-                synthNode.WetOName = synthTable.WetOName;
-                synthNode.Wet0 = synthTable.Wet0;
-                synthNode.Wet1 = synthTable.Wet1;
-                synthNode.Wet2 = synthTable.Wet2;
-                synthNode.Wet3 = synthTable.Wet3;
-                synthNode.Wet4 = synthTable.Wet4;
-                synthNode.Wet5 = synthTable.Wet5;
-                synthNode.Wet6 = synthTable.Wet6;
-                synthNode.Wet7 = synthTable.Wet7;
-                synthNode.Wcnct0 = synthTable.Wcnct0;
-                synthNode.Wcnct1 = synthTable.Wcnct1;
-                synthNode.Wcnct2 = synthTable.Wcnct2;
-                synthNode.Wcnct3 = synthTable.Wcnct3;
-                synthNode.Wcnct4 = synthTable.Wcnct4;
-                synthNode.Wcnct5 = synthTable.Wcnct5;
-                synthNode.Wcnct6 = synthTable.Wcnct6;
-                synthNode.Wcnct7 = synthTable.Wcnct7;
-                synthNode.VoiceLimitType = synthTable.VoiceLimitType;
-                synthNode.VoiceLimitPriority = synthTable.VoiceLimitPriority;
-                synthNode.VoiceLimitProhibitionTime = synthTable.VoiceLimitPhTime;
-                synthNode.VoiceLimitPcdlt = synthTable.VoiceLimitPcdlt;
-                synthNode.Pan3dVolumeOffset = synthTable.Pan3dVolumeOffset;
-                synthNode.Pan3dVolumeGain = synthTable.Pan3dVolumeGain;
-                synthNode.Pan3dAngleOffset = synthTable.Pan3dAngleOffset;
-                synthNode.Pan3dAngleGain = synthTable.Pan3dAngleGain;
-                synthNode.Pan3dDistanceOffset = synthTable.Pan3dDistanceOffset;
-                synthNode.Pan3dDistanceGain = synthTable.Pan3dDistanceGain;
-                synthNode.Dry0g = synthTable.Dry0g;
-                synthNode.Dry1g = synthTable.Dry1g;
-                synthNode.Dry2g = synthTable.Dry2g;
-                synthNode.Dry3g = synthTable.Dry3g;
-                synthNode.Dry4g = synthTable.Dry4g;
-                synthNode.Dry5g = synthTable.Dry5g;
-                synthNode.Dry6g = synthTable.Dry6g;
-                synthNode.Dry7g = synthTable.Dry7g;
-                synthNode.Wet0g = synthTable.Wet0g;
-                synthNode.Wet1g = synthTable.Wet1g;
-                synthNode.Wet2g = synthTable.Wet2g;
-                synthNode.Wet3g = synthTable.Wet3g;
-                synthNode.Wet4g = synthTable.Wet4g;
-                synthNode.Wet5g = synthTable.Wet5g;
-                synthNode.Wet6g = synthTable.Wet6g;
-                synthNode.Wet7g = synthTable.Wet7g;
-                synthNode.Filter1Type = synthTable.F1Type;
-                synthNode.Filter1CutoffOffset = synthTable.F1CofOffset;
-                synthNode.Filter1CutoffGain = synthTable.F1CofGain;
-                synthNode.Filter1ResoOffset = synthTable.F1ResoOffset;
-                synthNode.Filter1ResoGain = synthTable.F1ResoGain;
-                synthNode.Filter2Type = synthTable.F2Type;
-                synthNode.Filter2CutoffLowerOffset = synthTable.F2CofLowOffset;
-                synthNode.Filter2CutoffLowerGain = synthTable.F2CofLowGain;
-                synthNode.Filter2CutoffHigherOffset = synthTable.F2CofHighOffset;
-                synthNode.Filter2CutoffHigherGain = synthTable.F2CofHighGain;
-                synthNode.PlaybackProbability = synthTable.Probability;
-                synthNode.NLmtChildren = synthTable.NumberLmtChildren;
-                synthNode.Repeat = synthTable.Repeat;
-                synthNode.ComboTime = synthTable.ComboTime;
-                synthNode.ComboLoopBack = synthTable.ComboLoopBack;
+                BuilderSynthNode synthNode = new BuilderSynthNode
+                {
+                    Name = synthTable.SynthName,
+                    Type = (BuilderSynthType)synthTable.SynthType,
+                    PlaybackType = (BuilderSynthPlaybackType)synthTable.ComplexType,
+                    Volume = synthTable.Volume,
+                    Pitch = synthTable.Pitch,
+                    DelayTime = synthTable.DelayTime,
+                    SControl = synthTable.SControl,
+                    EgDelay = synthTable.EgDelay,
+                    EgAttack = synthTable.EgAttack,
+                    EgHold = synthTable.EgHold,
+                    EgDecay = synthTable.EgDecay,
+                    EgRelease = synthTable.EgRelease,
+                    EgSustain = synthTable.EgSustain,
+                    FilterType = synthTable.FType,
+                    FilterCutoff1 = synthTable.FCof1,
+                    FilterCutoff2 = synthTable.FCof2,
+                    FilterReso = synthTable.FReso,
+                    FilterReleaseOffset = synthTable.FReleaseOffset,
+                    DryOName = synthTable.DryOName,
+                    Mtxrtr = synthTable.Mtxrtr,
+                    Dry0 = synthTable.Dry0,
+                    Dry1 = synthTable.Dry1,
+                    Dry2 = synthTable.Dry2,
+                    Dry3 = synthTable.Dry3,
+                    Dry4 = synthTable.Dry4,
+                    Dry5 = synthTable.Dry5,
+                    Dry6 = synthTable.Dry6,
+                    Dry7 = synthTable.Dry7,
+                    WetOName = synthTable.WetOName,
+                    Wet0 = synthTable.Wet0,
+                    Wet1 = synthTable.Wet1,
+                    Wet2 = synthTable.Wet2,
+                    Wet3 = synthTable.Wet3,
+                    Wet4 = synthTable.Wet4,
+                    Wet5 = synthTable.Wet5,
+                    Wet6 = synthTable.Wet6,
+                    Wet7 = synthTable.Wet7,
+                    Wcnct0 = synthTable.Wcnct0,
+                    Wcnct1 = synthTable.Wcnct1,
+                    Wcnct2 = synthTable.Wcnct2,
+                    Wcnct3 = synthTable.Wcnct3,
+                    Wcnct4 = synthTable.Wcnct4,
+                    Wcnct5 = synthTable.Wcnct5,
+                    Wcnct6 = synthTable.Wcnct6,
+                    Wcnct7 = synthTable.Wcnct7,
+                    VoiceLimitType = synthTable.VoiceLimitType,
+                    VoiceLimitPriority = synthTable.VoiceLimitPriority,
+                    VoiceLimitProhibitionTime = synthTable.VoiceLimitPhTime,
+                    VoiceLimitPcdlt = synthTable.VoiceLimitPcdlt,
+                    Pan3dVolumeOffset = synthTable.Pan3dVolumeOffset,
+                    Pan3dVolumeGain = synthTable.Pan3dVolumeGain,
+                    Pan3dAngleOffset = synthTable.Pan3dAngleOffset,
+                    Pan3dAngleGain = synthTable.Pan3dAngleGain,
+                    Pan3dDistanceOffset = synthTable.Pan3dDistanceOffset,
+                    Pan3dDistanceGain = synthTable.Pan3dDistanceGain,
+                    Dry0g = synthTable.Dry0g,
+                    Dry1g = synthTable.Dry1g,
+                    Dry2g = synthTable.Dry2g,
+                    Dry3g = synthTable.Dry3g,
+                    Dry4g = synthTable.Dry4g,
+                    Dry5g = synthTable.Dry5g,
+                    Dry6g = synthTable.Dry6g,
+                    Dry7g = synthTable.Dry7g,
+                    Wet0g = synthTable.Wet0g,
+                    Wet1g = synthTable.Wet1g,
+                    Wet2g = synthTable.Wet2g,
+                    Wet3g = synthTable.Wet3g,
+                    Wet4g = synthTable.Wet4g,
+                    Wet5g = synthTable.Wet5g,
+                    Wet6g = synthTable.Wet6g,
+                    Wet7g = synthTable.Wet7g,
+                    Filter1Type = synthTable.F1Type,
+                    Filter1CutoffOffset = synthTable.F1CofOffset,
+                    Filter1CutoffGain = synthTable.F1CofGain,
+                    Filter1ResoOffset = synthTable.F1ResoOffset,
+                    Filter1ResoGain = synthTable.F1ResoGain,
+                    Filter2Type = synthTable.F2Type,
+                    Filter2CutoffLowerOffset = synthTable.F2CofLowOffset,
+                    Filter2CutoffLowerGain = synthTable.F2CofLowGain,
+                    Filter2CutoffHigherOffset = synthTable.F2CofHighOffset,
+                    Filter2CutoffHigherGain = synthTable.F2CofHighGain,
+                    PlaybackProbability = synthTable.Probability,
+                    NLmtChildren = synthTable.NumberLmtChildren,
+                    Repeat = synthTable.Repeat,
+                    ComboTime = synthTable.ComboTime,
+                    ComboLoopBack = synthTable.ComboLoopBack
+                };
 
                 project.SynthNodes.Add(synthNode);
             }
@@ -278,12 +290,14 @@ namespace CsbBuilder.Importer
             // Convert the cue tables
             foreach (SerializationCueTable cueTable in cueTables)
             {
-                BuilderCueNode cueNode = new BuilderCueNode();
-                cueNode.Name = cueTable.Name;
-                cueNode.Id = cueTable.Id;
-                cueNode.UserComment = cueTable.UserData;
-                cueNode.Flags = cueTable.Flags;
-                cueNode.SynthReference = cueTable.SynthPath;
+                BuilderCueNode cueNode = new BuilderCueNode
+                {
+                    Name = cueTable.Name,
+                    Id = cueTable.Id,
+                    UserComment = cueTable.UserData,
+                    Flags = cueTable.Flags,
+                    SynthReference = cueTable.SynthPath
+                };
                 project.CueNodes.Add(cueNode);
             }
 

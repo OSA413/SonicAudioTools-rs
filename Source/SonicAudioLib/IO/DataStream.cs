@@ -387,64 +387,80 @@ namespace SonicAudioLib.IO
 
         public static float ReadSingle(Stream source)
         {
-            var union = new SingleUnion();
-            union.UInt = ReadUInt32(source);
+            var union = new SingleUnion
+            {
+                UInt = ReadUInt32(source)
+            };
 
             return union.Single;
         }
 
         public static float ReadSingleBE(Stream source)
         {
-            var union = new SingleUnion();
-            union.UInt = ReadUInt32BE(source);
+            var union = new SingleUnion
+            {
+                UInt = ReadUInt32BE(source)
+            };
 
             return union.Single;
         }
 
         public static void WriteSingle(Stream destination, float value)
         {
-            var union = new SingleUnion();
-            union.Single = value;
+            var union = new SingleUnion
+            {
+                Single = value
+            };
 
             WriteUInt32(destination, union.UInt);
         }
 
         public static void WriteSingleBE(Stream destination, float value)
         {
-            var union = new SingleUnion();
-            union.Single = value;
+            var union = new SingleUnion
+            {
+                Single = value
+            };
 
             WriteUInt32BE(destination, union.UInt);
         }
 
         public static double ReadDouble(Stream source)
         {
-            var union = new DoubleUnion();
-            union.ULong = ReadUInt64(source);
+            var union = new DoubleUnion
+            {
+                ULong = ReadUInt64(source)
+            };
 
             return union.Double;
         }
 
         public static double ReadDoubleBE(Stream source)
         {
-            var union = new DoubleUnion();
-            union.ULong = ReadUInt64BE(source);
+            var union = new DoubleUnion
+            {
+                ULong = ReadUInt64BE(source)
+            };
 
             return union.Double;
         }
 
         public static void WriteDouble(Stream destination, double value)
         {
-            var union = new DoubleUnion();
-            union.Double = value;
+            var union = new DoubleUnion
+            {
+                Double = value
+            };
 
             WriteUInt64(destination, union.ULong);
         }
 
         public static void WriteDoubleBE(Stream destination, double value)
         {
-            var union = new DoubleUnion();
-            union.Double = value;
+            var union = new DoubleUnion
+            {
+                Double = value
+            };
 
             WriteUInt64BE(destination, union.ULong);
         }
