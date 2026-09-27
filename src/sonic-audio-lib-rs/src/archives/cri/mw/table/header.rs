@@ -79,7 +79,7 @@ impl CriTableHeader {
                 else
                 {
                     // TODO?
-                    todo!("{}", field_flag);
+                    todo!("TODO: #1 {}", field_flag);
                     // Probably a vec<u8>
                     // field_Value = ReadValue(field.Flag);
                 }
