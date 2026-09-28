@@ -169,4 +169,31 @@ impl CriTableHeader {
             row_index: -1,
         })
     }
+
+    pub fn get_length_and_position_by_index(&self, source: &[u8], field_name: &str) -> (u32, u32) {
+        let field_index = self.fields.iter().position(|x| x.name == field_name);
+
+        let field_index = match field_index {
+            Some(index) => index,
+            None => return (0, 0),
+        };
+
+        if field_index < 0 || field_index as usize >= self.fields.len() {
+            return (0, 0);
+        }
+
+        if !has_flag(self.fields[field_index].flag.clone() as u8, CriFieldFlag::RowStorage as u8) {
+            return (
+                self.fields[field_index].length,
+                self.fields[field_index].position,
+            );
+        }
+
+        let ptr = self.go_to_value_ptr(Some(0), field_index);
+
+        return (
+            binary_reader::u32::read(source, ptr + 4 as usize, &Endianness::Big, "").unwrap(),
+            0 + self.data_pool_position + binary_reader::u32::read(source, ptr as usize, &Endianness::Big, "").unwrap()
+        )
+    }
 }

@@ -1,4 +1,5 @@
 #[repr(u8)]
+#[derive(Clone)]
 pub enum CriFieldFlag{
     Name = 16,
     DefaultValue = 32,
