@@ -30,7 +30,7 @@ impl CriAaxArchive {
         }
 
         while reader.read() {
-            let (length, position) = reader.get_length_and_position_by_index(&source, "data");
+            let (length, position) = reader.get_length_and_position(&source, "data");
             entries.push(CriAaxEntry {
                 flag: CriAaxEntryFlag::from(reader.get_field("lpflg").unwrap().to_u32()?),
                 position,

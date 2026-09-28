@@ -170,7 +170,7 @@ impl CriTableHeader {
         })
     }
 
-    pub fn get_length_and_position_by_index(&self, source: &[u8], field_name: &str) -> (u32, u32) {
+    pub fn get_length_and_position(&self, source: &[u8], field_name: &str) -> (u32, u32) {
         let field_index = self.fields.iter().position(|x| x.name == field_name);
 
         let field_index = match field_index {

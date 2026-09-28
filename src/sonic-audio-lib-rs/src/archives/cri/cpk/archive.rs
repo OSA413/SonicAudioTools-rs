@@ -169,4 +169,17 @@ impl CriCpkArchive {
 
         Ok(CriCpkArchive { align: 1, mode, enable_mask: false, comment, entries })
     }
+
+    pub fn get_by_path(&self, path: &str) -> Option<&CriCpkEntry> {
+        let corrected_path = path.replace("\\", "/");
+
+        return self.entries.iter().find(|entry| {
+            let search = match entry.directory_name.is_empty() {
+                true => entry.name.clone(),
+                false => format!("{}{}", entry.directory_name.replace("\\", "/"), entry.name),
+            };
+
+            return search == corrected_path;
+        });
+    }
 }

@@ -1,0 +1,15 @@
+[package]
+name = "csb-editor-rs"
+description = "TODO"
+version = "0.1.0"
+edition = "2024"
+authors = ["Oleg \"OSA413\" Sokolov", "Skyth"]
+repository = "https://github.com/OSA413/SonicAudioTools-rs"
+homepage = "https://github.com/OSA413/SonicAudioTools-rs"
+license = "MIT"
+
+[dependencies]
+sonic-audio-lib-rs = { path = "../sonic-audio-lib-rs" }
+
+[lints]
+workspace = true

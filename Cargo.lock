@@ -26,6 +26,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "csb-editor-rs"
+version = "0.1.0"
+dependencies = [
+ "sonic-audio-lib-rs",
+]
+
+[[package]]
 name = "itoa"
 version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
