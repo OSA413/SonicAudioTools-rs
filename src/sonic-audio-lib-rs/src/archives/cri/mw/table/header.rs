@@ -16,11 +16,36 @@ pub struct CriTableHeader {
     pub row_length: u32,
     pub row_count: u32,
     pub fields: Vec<CriTableField>,
+    row_index: i32,
 }
 
 impl CriTableHeader {
-    pub fn read_table(source: &[u8], pointer: Option<usize>) -> Result<Self, CommonBinaryError> {
+    pub fn get_field(&self, field_name: &str) -> Option<&CriTableField> {
+        self.fields.iter().find(|field| field.name == field_name)
+    }
+
+    pub fn go_to_value_ptr(&self, starting_pointer: Option<usize>, field_index: usize) -> usize {
+        starting_pointer.unwrap_or(0) + (self.rows_position as usize) + (self.row_length as usize * self.row_index as usize) + self.fields[field_index].offset as usize
+    }
+
+    pub fn read(&mut self) -> bool {
+        if (self.row_index + 1) as u32 >= self.row_count
+        {
+            return false;
+        }
+
+        self.row_index += 1;
+        return true;
+    }
+
+    pub fn read_table(source: &[u8], pointer: Option<usize>, expected_segnature: [u8; 4]) -> Result<Self, CommonBinaryError> {
         let pointer = pointer.unwrap_or(0);
+
+        if !source[pointer..pointer + 4].eq(&expected_segnature)
+        {
+            eprintln!("Invalid signature");
+            return Err(CommonBinaryError::SeeConsole());
+        }
 
         let header_length = binary_reader::u32::read(source, pointer + 0x04, &Endianness::Big, "")? + 0x8;
         let header_unknown_byte = binary_reader::u8::read(source, pointer + 0x08, "")?;
@@ -140,7 +165,8 @@ impl CriTableHeader {
             field_count: header_field_count,
             row_length: header_row_count,
             row_count: header_row_count,
-            fields
+            fields,
+            row_index: -1,
         })
     }
 }
