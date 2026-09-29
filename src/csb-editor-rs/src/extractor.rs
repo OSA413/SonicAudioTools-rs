@@ -89,7 +89,7 @@ pub fn extract_csb(path: &str) {
 
                                     fs::write(
                                         destination_path.clone().join(adx_file_name),
-                                        &cpk_source.unwrap()[data_start_pointer..data_start_pointer + entry.length as usize],
+                                        &cpk_source.as_ref().unwrap()[data_start_pointer..data_start_pointer + entry.length as usize],
                                     ).unwrap();
                                 }
                             }
@@ -112,7 +112,7 @@ pub fn extract_csb(path: &str) {
 
                             fs::write(
                                 destination_path.join(adx_file_name),
-                                &cpk_source.unwrap()[data_start_pointer as usize..data_start_pointer as usize + entry.length as usize],
+                                &cpk_source.as_ref().unwrap()[data_start_pointer as usize..data_start_pointer as usize + entry.length as usize],
                             ).unwrap();
                         }
                     }
