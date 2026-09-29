@@ -66,7 +66,7 @@ pub fn extract_csb(path: &str) {
 
                     let sdlName = sdlReader.get_field("name").unwrap().to_string().unwrap();
                     let destination_path = outputDirectoryName.join(&sdlName);
-                    create_dir_all(&destination_path);
+                    create_dir_all(&destination_path).unwrap();
 
                     if streaming {
                         let cpkEntry = cpk_archive.as_ref().unwrap().get_by_path(&sdlName.into_boxed_str());
@@ -95,9 +95,7 @@ pub fn extract_csb(path: &str) {
                             }
                             None => ()
                         }
-                    }
-                    else
-                    {
+                    } else {
                         let aaxPosition = sdlReader.get_length_and_position(&file_content, "data");
                         let aaxSource = &file_content[aaxPosition.1 as usize..aaxPosition.0 as usize + aaxPosition.1 as usize];
                         let aax_archive = CriAaxArchive::read(aaxSource, Some(0)).unwrap();

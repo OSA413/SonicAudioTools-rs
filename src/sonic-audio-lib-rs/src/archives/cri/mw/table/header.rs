@@ -66,7 +66,7 @@ impl CriTableHeader {
             },
         };
 
-        let header_rows_position = u16::try_from(binary_reader::u32::read(source, pointer + 0x0A, &Endianness::Big, "")? + 0x8).unwrap();
+        let header_rows_position = binary_reader::u16::read(source, pointer + 0x0A, &Endianness::Big, "")? + 0x8;
         let header_string_pool_position = binary_reader::u32::read(source, pointer + 0x0E, &Endianness::Big, "")? + 0x8;
         let header_data_pool_position = binary_reader::u32::read(source, pointer + 0x12, &Endianness::Big, "")? + 0x8;
         let header_table_name_pointer = binary_reader::u32::read(source, pointer + 0x16, &Endianness::Big, "")?;
