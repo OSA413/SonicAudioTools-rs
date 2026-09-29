@@ -11,6 +11,7 @@ license = "MIT"
 [dependencies]
 common_binary = { path = "../../src_tools/src/common/binary" }
 chrono = { version = "0.4.45", default-features = false }
+bitflags = { version = "2.13.2" }
 
 [lints]
 workspace = true

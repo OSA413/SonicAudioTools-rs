@@ -2,6 +2,7 @@ use common_binary::{binary_reader, endianness::Endianness, error::CommonBinaryEr
 
 use crate::archives::cri::mw::table::field_flag::CriFieldFlag;
 
+#[derive(Debug)]
 pub struct CriTableField
 {
     pub flag: CriFieldFlag,

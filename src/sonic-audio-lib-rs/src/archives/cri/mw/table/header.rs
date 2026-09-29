@@ -13,7 +13,7 @@ pub struct CriTableHeader {
     pub data_pool_position: u32,
     pub table_name: String,
     pub field_count: u16,
-    pub row_length: u32,
+    pub row_length: u16,
     pub row_count: u32,
     pub fields: Vec<CriTableField>,
     row_index: i32,
@@ -67,14 +67,15 @@ impl CriTableHeader {
         };
 
         let header_rows_position = binary_reader::u16::read(source, pointer + 0x0A, &Endianness::Big, "")? + 0x8;
-        let header_string_pool_position = binary_reader::u32::read(source, pointer + 0x0E, &Endianness::Big, "")? + 0x8;
-        let header_data_pool_position = binary_reader::u32::read(source, pointer + 0x12, &Endianness::Big, "")? + 0x8;
-        let header_table_name_pointer = binary_reader::u32::read(source, pointer + 0x16, &Endianness::Big, "")?;
-        let header_field_count = binary_reader::u16::read(source, pointer + 0x1A, &Endianness::Big, "")?;
-        let header_row_count = binary_reader::u32::read(source, pointer + 0x1E, &Endianness::Big, "")?;
+        let header_string_pool_position = binary_reader::u32::read(source, pointer + 0x0C, &Endianness::Big, "")? + 0x8;
+        let header_data_pool_position = binary_reader::u32::read(source, pointer + 0x10, &Endianness::Big, "")? + 0x8;
+        let header_relative_table_name_pointer = binary_reader::u32::read(source, pointer + 0x14, &Endianness::Big, "")?;
+        let header_field_count = binary_reader::u16::read(source, pointer + 0x18, &Endianness::Big, "")?;
+        let header_row_length = binary_reader::u16::read(source, pointer + 0x1A, &Endianness::Big, "")?;
+        let header_row_count = binary_reader::u32::read(source, pointer + 0x1C, &Endianness::Big, "")?;
 
         let mut offset= 0;
-        let mut pointer = pointer + 0x22;
+        let mut pointer = pointer + 0x20;
 
         let mut fields = Vec::with_capacity(header_field_count as usize);
 
@@ -89,14 +90,14 @@ impl CriTableHeader {
             // /Maybe redo as a builder pattern?
             pointer += 0x01;
 
-            if has_flag(field_flag, CriFieldFlag::Name as u8)
+            if has_flag(field_flag, CriFieldFlag::Name.bits())
             {
                 field_name_pointer = binary_reader::u32::read(source, pointer, &Endianness::Big, "")?;
                 pointer += 0x04;
             }
 
-            if has_flag(field_flag, CriFieldFlag::DefaultValue as u8) {
-                if has_flag(field_flag, CriFieldFlag::Data as u8) {
+            if has_flag(field_flag, CriFieldFlag::DefaultValue.bits()) {
+                if has_flag(field_flag, CriFieldFlag::Data.bits()) {
                     field_position = binary_reader::u32::read(source, pointer, &Endianness::Big, "")?;
                     field_length = binary_reader::u32::read(source, pointer + 0x04, &Endianness::Big, "")?;
                     pointer += 0x08;
@@ -109,21 +110,20 @@ impl CriTableHeader {
                     // field_Value = ReadValue(field.Flag);
                 }
             }
-
             // Not even per row, and not even constant value? Then there's no storage.
-            else if !has_flag(field_flag, CriFieldFlag::RowStorage as u8)
-                && !has_flag(field_flag, CriFieldFlag::DefaultValue as u8)
+            else if !has_flag(field_flag, CriFieldFlag::RowStorage.bits())
+                && !has_flag(field_flag, CriFieldFlag::DefaultValue.bits())
             {
                 field_value = vec![0];
             }
 
             // Row storage, calculate the offset
-            if has_flag(field_flag, CriFieldFlag::RowStorage as u8)
+            if has_flag(field_flag, CriFieldFlag::RowStorage.bits())
             {
                 // Is this field needed?
                 field_offset = offset;
 
-                offset += match CriFieldFlag::from((field_flag) & (CriFieldFlag::TypeMask as u8)) {
+                let type_offset = match (CriFieldFlag::from_bits(field_flag).unwrap()) & (CriFieldFlag::TypeMask) {
                     CriFieldFlag::Byte => 1,
                     CriFieldFlag::SByte => 1,
                     CriFieldFlag::Int16 => 2,
@@ -137,13 +137,15 @@ impl CriTableHeader {
                     CriFieldFlag::Double => 8,
                     CriFieldFlag::Data => 8,
                     _ => panic!("At the dance floor"),
-                }
+                };
+
+                offset += type_offset;
             }
 
-            let field_name = binary_reader::string32::read(source, field_name_pointer as usize, "")?.0;
+            let field_name = binary_reader::string32::read(source, header_string_pool_position as usize + field_name_pointer as usize, "")?.0;
 
             fields.push(CriTableField {
-                flag: CriFieldFlag::from(field_flag),
+                flag: CriFieldFlag::from_bits(field_flag).unwrap(),
                 name: field_name,
                 position: field_position,
                 length: field_length,
@@ -152,7 +154,7 @@ impl CriTableHeader {
             });
         }
 
-        let header_table_name = binary_reader::string32::read(source, header_table_name_pointer as usize, "")?.0;
+        let header_table_name = binary_reader::string32::read(source, pointer + header_string_pool_position as usize + header_relative_table_name_pointer as usize, "")?.0;
 
         Ok(CriTableHeader {
             length: header_length,
@@ -163,7 +165,7 @@ impl CriTableHeader {
             data_pool_position: header_data_pool_position,
             table_name: header_table_name,
             field_count: header_field_count,
-            row_length: header_row_count,
+            row_length: header_row_length,
             row_count: header_row_count,
             fields,
             row_index: -1,
@@ -178,11 +180,11 @@ impl CriTableHeader {
             None => return (0, 0),
         };
 
-        if field_index < 0 || field_index as usize >= self.fields.len() {
+        if field_index as usize >= self.fields.len() {
             return (0, 0);
         }
 
-        if !has_flag(self.fields[field_index].flag.clone() as u8, CriFieldFlag::RowStorage as u8) {
+        if !has_flag(self.fields[field_index].flag.bits(), CriFieldFlag::RowStorage.bits()) {
             return (
                 self.fields[field_index].length,
                 self.fields[field_index].position,
