@@ -38,8 +38,10 @@ pub fn extract_csb(path: &str) {
 
         let mut reader = CriTableHeader::read_table(&file_content, Some(0), [0x40, 0x55, 0x54, 0x46]).unwrap();
 
+        println!("{reader:?}");
+
         while reader.read() {
-            if reader.get_field("name").unwrap().to_string().unwrap() == "SOUND_ELEMENT" {
+            if reader.get_field("name").unwrap().to_string(reader.row_index - 1).unwrap() == "SOUND_ELEMENT" {
                 let table_length_and_position = reader.get_length_and_position(&file_content, "utf");
                 let mut sdlReader = CriTableHeader::read_table(
                     &(file_content.as_slice())[table_length_and_position.1 as usize..table_length_and_position.0 as usize + table_length_and_position.1 as usize],
@@ -49,11 +51,11 @@ pub fn extract_csb(path: &str) {
 
                 while sdlReader.read()
                 {
-                    if sdlReader.get_field("fmt").unwrap().to_u16().unwrap() != 0 {
+                    if sdlReader.get_field("fmt").unwrap().to_u16(sdlReader.row_index - 1).unwrap() != 0 {
                         panic!("The given CSB file contains an audio file which is not an ADX. Only CSB files with ADXs are supported.");
                     }
 
-                    let streaming = sdlReader.get_field("stmflg").unwrap().to_u16().unwrap() > 0;
+                    let streaming = sdlReader.get_field("stmflg").unwrap().to_u16(sdlReader.row_index - 1).unwrap() > 0;
 
                     if streaming && found.is_none() {
                         panic!("Cannot find the external .CPK file for this .CSB file. Please ensure that the external .CPK file is stored in the directory where the .CPK file is.");
@@ -64,7 +66,7 @@ pub fn extract_csb(path: &str) {
                         cpk_archive = CriCpkArchive::read(&cpk_source.as_ref().unwrap(), 0).ok();
                     }
 
-                    let sdlName = sdlReader.get_field("name").unwrap().to_string().unwrap();
+                    let sdlName = sdlReader.get_field("name").unwrap().to_string(sdlReader.row_index - 1).unwrap();
                     let destination_path = outputDirectoryName.join(&sdlName);
                     create_dir_all(&destination_path).unwrap();
 

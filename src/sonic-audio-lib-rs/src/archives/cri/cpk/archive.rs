@@ -19,11 +19,11 @@ impl CriCpkArchive {
 
         let (mode, is_latest_version) = match reader.get_field("CpkMode") {
             Some(is_latest_version) => {
-                (CriCpkMode::from(is_latest_version.to_u32()?), true)
+                (CriCpkMode::from(is_latest_version.to_u32(reader.row_index - 1)?), true)
             }
             None => {
-                let tocEnabled = reader.get_field("TocOffset").is_some_and(|x| x.to_u64().unwrap() > 0);
-                let itocEnabled = reader.get_field("ItocOffset").is_some_and(|x| x.to_u64().unwrap() > 0);
+                let tocEnabled = reader.get_field("TocOffset").is_some_and(|x| x.to_u64(reader.row_index - 1).unwrap() > 0);
+                let itocEnabled = reader.get_field("ItocOffset").is_some_and(|x| x.to_u64(reader.row_index - 1).unwrap() > 0);
 
                 if tocEnabled && !itocEnabled {
                     (CriCpkMode::FileName, false)
@@ -49,12 +49,12 @@ impl CriCpkArchive {
         }
 
         // Why is this u64?
-        let tocPosition = reader.get_field("TocOffset").unwrap().to_u64()?;
-        let itocPosition = reader.get_field("ItocOffset").unwrap().to_u64()?;
-        let etocPosition = reader.get_field("EtocOffset").unwrap().to_u64()?;
-        let contentPosition = reader.get_field("ContentOffset").unwrap().to_u64()?;
+        let tocPosition = reader.get_field("TocOffset").unwrap().to_u64(reader.row_index - 1)?;
+        let itocPosition = reader.get_field("ItocOffset").unwrap().to_u64(reader.row_index - 1)?;
+        let etocPosition = reader.get_field("EtocOffset").unwrap().to_u64(reader.row_index - 1)?;
+        let contentPosition = reader.get_field("ContentOffset").unwrap().to_u64(reader.row_index - 1)?;
 
-        let align = reader.get_field("Align").unwrap().to_u16()?;
+        let align = reader.get_field("Align").unwrap().to_u16(reader.row_index - 1)?;
 
         let mut entries = vec![];
 
@@ -65,16 +65,16 @@ impl CriCpkArchive {
 
             while tocReader.read() {
                 let mut entry = CriCpkEntry {
-                    directory_name: tocReader.get_field("DirName").unwrap().to_string()?,
-                    name: tocReader.get_field("FileName").unwrap().to_string()?,
-                    length: tocReader.get_field("FileSize").unwrap().to_u32()?,
-                    position: tocReader.get_field("FileOffset").unwrap().to_u32()?,
+                    directory_name: tocReader.get_field("DirName").unwrap().to_string(tocReader.row_index - 1)?,
+                    name: tocReader.get_field("FileName").unwrap().to_string(tocReader.row_index - 1)?,
+                    length: tocReader.get_field("FileSize").unwrap().to_u32(tocReader.row_index - 1)?,
+                    position: tocReader.get_field("FileOffset").unwrap().to_u32(tocReader.row_index - 1)?,
                     id: match is_latest_version {
-                        true => tocReader.get_field("ID").unwrap().to_u32()?,
-                        false => tocReader.get_field("Info").unwrap().to_u32()?
+                        true => tocReader.get_field("ID").unwrap().to_u32(tocReader.row_index - 1)?,
+                        false => tocReader.get_field("Info").unwrap().to_u32(tocReader.row_index - 1)?,
                     },
-                    comment: tocReader.get_field("UserString").unwrap().to_string()?,
-                    uncompressed_length: tocReader.get_field("ExtractSize").unwrap().to_u32()?,
+                    comment: tocReader.get_field("UserString").unwrap().to_string(tocReader.row_index - 1)?,
+                    uncompressed_length: tocReader.get_field("ExtractSize").unwrap().to_u32(tocReader.row_index - 1)?,
                     update_date_time: NaiveDateTime::new(
                         NaiveDate::from_ymd_opt(1970, 1, 1).unwrap(),
                         NaiveTime::from_hms_opt(0, 0, 0).unwrap()
@@ -165,7 +165,7 @@ impl CriCpkArchive {
             return Err(CommonBinaryError::SeeConsole());
         }
 
-        let comment = reader.get_field("Comment").unwrap().to_string()?;
+        let comment = reader.get_field("Comment").unwrap().to_string(reader.row_index - 1)?;
 
         Ok(CriCpkArchive { align: 1, mode, enable_mask: false, comment, entries })
     }

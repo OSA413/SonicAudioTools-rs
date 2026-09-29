@@ -1,4 +1,5 @@
 #[repr(u8)]
+#[derive(Debug)]
 pub enum CriTableHeaderEncodingType {
     ShiftJis = 0,
     Utf8 = 1,

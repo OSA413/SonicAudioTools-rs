@@ -1,7 +1,7 @@
 use bitflags::bitflags;
 
 bitflags! {
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, Clone)]
     pub struct CriFieldFlag: u8 {
         const Name = 16;
         const DefaultValue = 32;
