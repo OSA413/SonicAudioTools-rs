@@ -41,7 +41,7 @@ pub fn extract_csb(path: &str) {
         println!("{reader:?}");
 
         while reader.read() {
-            println!("{:?}", reader.get_field("name").unwrap().to_string(reader.row_index));
+            println!("{:?}", reader.get_field("name").unwrap().to_string(reader.row_index-1));
             if reader.get_field("name").unwrap().to_string(reader.row_index - 1).unwrap() == "SOUND_ELEMENT" {
                 let table_length_and_position = reader.get_length_and_position(&file_content, "utf");
                 let mut sdlReader = CriTableHeader::read_table(
