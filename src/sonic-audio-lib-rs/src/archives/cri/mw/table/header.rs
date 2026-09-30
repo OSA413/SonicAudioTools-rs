@@ -98,6 +98,7 @@ impl CriTableHeader {
                 field_index_pointer += 0x04;
             }
 
+            println!("{} - {header_string_pool_position} - {field_name_pointer}", pointer + field_index_pointer);
             let field_name = binary_reader::string32::read(source, header_string_pool_position as usize + field_name_pointer as usize, "").unwrap().0;
 
             let mut row_offset = 0;
@@ -153,20 +154,12 @@ impl CriTableHeader {
                     new_pointer_offset += type_offset;
                     row_offset += type_offset as u32;
 
-                    println!("+++++++");
-                    println!("{new_pointer_offset}");
-
                     let value_pointer = CriTableHeader::go_to_value_ptr(None, header_rows_position as usize, header_row_length as usize, row_index as usize, field_offset as usize);                        
-                    println!("{value_pointer}");
-                    println!();
 
                     row_value = 
                         if type_.contains(CriFieldFlag::Data) {
                             println!("{field_name}");
                             println!("data");
-                            println!("{value_pointer}");
-                            println!("{row_index}");
-                            println!();
                             let position = binary_reader::u32::read(source, value_pointer, &Endianness::Big, "")? as usize;
                             let length = binary_reader::u32::read(source, value_pointer + 0x04, &Endianness::Big, "")? as usize;
                             let start = 0 + position + header_data_pool_position as usize;
@@ -179,12 +172,9 @@ impl CriTableHeader {
                         else if type_.contains(CriFieldFlag::String) {
                             println!("{field_name}");
                             println!("string");
-                            println!("{value_pointer}");
                             let string_pointer = binary_reader::u32::read(source, value_pointer, &Endianness::Big, "")? as usize;
                             let string_pointer = 0 + header_string_pool_position as usize + string_pointer;
                             let string = binary_reader::string::read(source, string_pointer as usize, "")?.0;
-                            println!("{string}");
-                            println!();
                             [string.as_bytes(), &[0]].concat().to_vec()
                         }
                         else if type_.contains(CriFieldFlag::Single) { todo!("single") }
@@ -249,7 +239,8 @@ impl CriTableHeader {
             );
         }
 
-        let ptr = CriTableHeader::go_to_value_ptr(Some(0), self.rows_position as usize, self.row_length as usize, self.row_index as usize, self.fields[field_index].position as usize);
+        let ptr = CriTableHeader::go_to_value_ptr(Some(0), self.rows_position as usize, self.row_length as usize, self.row_index as usize - 1, self.fields[field_index].offset as usize) + 5;
+        println!("{}", ptr);
 
         return (
             binary_reader::u32::read(source, ptr + 4 as usize, &Endianness::Big, "").unwrap(),
