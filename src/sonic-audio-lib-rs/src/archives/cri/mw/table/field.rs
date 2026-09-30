@@ -1,8 +1,9 @@
+use std::fmt;
+
 use common_binary::{binary_reader, endianness::Endianness, error::CommonBinaryError};
 
 use crate::archives::cri::mw::table::field_flag::CriFieldFlag;
 
-#[derive(Debug)]
 pub struct CriTableField
 {
     pub flag: CriFieldFlag,
@@ -11,6 +12,30 @@ pub struct CriTableField
     pub length: u32,
     pub offset: u32, //Is this really needed?
     pub value: Vec<Vec<u8>>,
+}
+
+impl fmt::Debug for CriTableField {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        #[derive(Debug)]
+        struct CriTableField<'a> {
+            pub flag: &'a CriFieldFlag,
+            pub name: &'a String,
+            pub position: &'a u32,
+            pub length: &'a u32,
+            pub offset: &'a u32, //Is this really needed?
+        }
+
+        let Self {
+            flag,
+            name,
+            position,
+            length,
+            offset,
+            value: _,
+        } = self;
+
+        fmt::Debug::fmt(&CriTableField { flag, name, position, length, offset }, f)
+    }
 }
 
 impl CriTableField {
@@ -36,8 +61,7 @@ impl CriTableField {
     }
 
     pub fn to_string(&self, row_index: usize) -> Result<String, CommonBinaryError> {
-        println!("{:?}", &self.value[row_index]);
-        match binary_reader::string32::read(&self.value[row_index], 0, "") {
+        match binary_reader::string::read(&self.value[row_index], 0, "") {
             Ok(value) => Ok(value.0),
             Err(error) => Err(error),
         }

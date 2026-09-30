@@ -41,6 +41,7 @@ pub fn extract_csb(path: &str) {
         println!("{reader:?}");
 
         while reader.read() {
+            println!("{:?}", reader.get_field("name").unwrap().to_string(reader.row_index));
             if reader.get_field("name").unwrap().to_string(reader.row_index - 1).unwrap() == "SOUND_ELEMENT" {
                 let table_length_and_position = reader.get_length_and_position(&file_content, "utf");
                 let mut sdlReader = CriTableHeader::read_table(
@@ -68,6 +69,7 @@ pub fn extract_csb(path: &str) {
 
                     let sdlName = sdlReader.get_field("name").unwrap().to_string(sdlReader.row_index - 1).unwrap();
                     let destination_path = outputDirectoryName.join(&sdlName);
+                    println!("{destination_path:?}");
                     create_dir_all(&destination_path).unwrap();
 
                     if streaming {

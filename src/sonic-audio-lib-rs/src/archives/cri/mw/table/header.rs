@@ -26,6 +26,7 @@ impl CriTableHeader {
     }
 
     pub fn go_to_value_ptr(starting_pointer: Option<usize>, rows_position: usize, row_length: usize, row_index: usize, offset: usize) -> usize {
+        println!("{rows_position}, {row_length}, {row_index}, {offset}");
         starting_pointer.unwrap_or(0) + rows_position + (row_length * row_index) + offset
     }
 
@@ -75,15 +76,19 @@ impl CriTableHeader {
 
         let mut pointer = pointer + 0x20;
 
-        let mut fields = Vec::with_capacity(header_field_count as usize);
+        let mut fields: Vec<CriTableField> = Vec::with_capacity(header_field_count as usize);
+        let mut global_field_offset = 0;
 
-        for _ in 0..header_field_count {
+        for field_index in 0..header_field_count {
             let field_flag = CriFieldFlag::from_bits(binary_reader::u8::read(source, pointer, "")?).unwrap();
             // Maybe redo as a builder pattern?
             let mut field_name_pointer = 0;
             let mut field_position = 0;
             let mut field_length = 0;
-            let mut field_offset = 0;
+            let mut field_offset = match fields.get(field_index as usize) {
+                Some(field) => field.offset,
+                None => 0,
+            };
             // /Maybe redo as a builder pattern?
             pointer += 0x01;
 
@@ -93,12 +98,12 @@ impl CriTableHeader {
                 pointer += 0x04;
             }
 
-            let mut values = Vec::with_capacity(header_row_count as usize);
+            let field_name = binary_reader::string32::read(source, header_string_pool_position as usize + field_name_pointer as usize, "")?.0;
 
+            let mut row_offset = 0;
             for row_index in 0..header_row_count {
-                let mut offset= 0;
                 let mut row_value = vec![0];
-                if has_flag(field_flag.bits(), CriFieldFlag::DefaultValue.bits()) {
+                if has_flag(field_flag.clone().bits(), CriFieldFlag::DefaultValue.bits()) {
                     if has_flag(field_flag.bits(), CriFieldFlag::Data.bits()) {
                         field_position = binary_reader::u32::read(source, pointer, &Endianness::Big, "")?;
                         field_length = binary_reader::u32::read(source, pointer + 0x04, &Endianness::Big, "")?;
@@ -123,11 +128,11 @@ impl CriTableHeader {
                 // Row storage, calculate the offset
                 if has_flag(field_flag.bits(), CriFieldFlag::RowStorage.bits())
                 {
-                    field_offset = offset;
+                    field_offset = row_offset;
 
                     let type_ = field_flag.clone() & CriFieldFlag::TypeMask;
 
-                    let type_offset =                        
+                    let type_offset =
                         if type_.contains(CriFieldFlag::Data) { 8 }
                         else if type_.contains(CriFieldFlag::Double) { 8 }
                         else if type_.contains(CriFieldFlag::UInt64) { 8 }
@@ -141,24 +146,36 @@ impl CriTableHeader {
                         else if type_.contains(CriFieldFlag::SByte) { 1 }
                         else if type_.contains(CriFieldFlag::Byte) { 1 }
                         else { panic!("At the dance floor, {type_:?}") };
+                        
+                    pointer += type_offset;
 
-                    offset += type_offset;
+                    let value_pointer = CriTableHeader::go_to_value_ptr(None, header_rows_position as usize, header_row_length as usize, row_index as usize, field_offset as usize);                        
 
-                    let value_pointer = CriTableHeader::go_to_value_ptr(None, header_rows_position as usize, header_row_length as usize, row_index as usize, field_offset);
                     row_value = 
-                        if type_.contains(CriFieldFlag::Data) { 
+                        if type_.contains(CriFieldFlag::Data) {
+                            println!("data");
+                            println!("{value_pointer}");
+                            println!("{row_offset}");
+                            println!("{row_index}");
+                            println!();
                             let position = binary_reader::u32::read(source, value_pointer, &Endianness::Big, "")? as usize;
                             let length = binary_reader::u32::read(source, value_pointer + 0x04, &Endianness::Big, "")? as usize;
                             let start = 0 + position + header_data_pool_position as usize;
+                            println!("{position} {length} {start}");
                             source[start..start + length].to_vec()
                         }
                         else if type_.contains(CriFieldFlag::Double) { todo!("double") }
                         else if type_.contains(CriFieldFlag::UInt64) { binary_reader::u64::read(source, value_pointer, &Endianness::Big, "")?.to_be_bytes().to_vec() }
                         else if type_.contains(CriFieldFlag::Int64) { binary_reader::u64::read(source, value_pointer, &Endianness::Big, "")?.to_be_bytes().to_vec() }
                         else if type_.contains(CriFieldFlag::String) {
+                            println!("string");
+                            println!("{value_pointer}");
+                            println!("{row_offset}");
                             let string_pointer = binary_reader::u32::read(source, value_pointer, &Endianness::Big, "")? as usize;
                             let string_pointer = 0 + header_string_pool_position as usize + string_pointer;
-                            let string = binary_reader::string32::read(source, string_pointer as usize, "")?.0;
+                            let string = binary_reader::string::read(source, string_pointer as usize, "")?.0;
+                            println!("{string}");
+                            println!();
                             [string.as_bytes(), &[0]].concat().to_vec()
                         }
                         else if type_.contains(CriFieldFlag::Single) { todo!("single") }
@@ -170,19 +187,24 @@ impl CriTableHeader {
                         else if type_.contains(CriFieldFlag::Byte) { vec![source[value_pointer]] }
                         else { panic!("After the dance floor, {type_:?}") };
                 }
-                values.push(row_value);
-            }
-            
-            let field_name = binary_reader::string32::read(source, header_string_pool_position as usize + field_name_pointer as usize, "")?.0;
 
-            fields.push(CriTableField {
-                flag: field_flag,
-                name: field_name,
-                position: field_position,
-                length: field_length,
-                value: values,
-                offset: field_offset as u32,
-            });
+                if fields.len() <= field_index as usize {
+                    fields.push(CriTableField {
+                        flag: field_flag.clone(),
+                        name: field_name.clone(),
+                        position: field_position,
+                        length: field_length,
+                        value: vec![],
+                        offset: field_offset as u32,
+                    });
+                }
+
+                fields[field_index as usize].value.push(row_value);
+            }
+
+            global_field_offset += header_row_length as usize;
+            println!("++++{row_offset}+++++");
+            println!("++++{global_field_offset}+++++");
         }
 
         let header_table_name = binary_reader::string32::read(source, pointer + header_string_pool_position as usize + header_relative_table_name_pointer as usize, "")?.0;
