@@ -36,8 +36,7 @@ This hexpat is MIT licensed:
 import std.ptr;
 
 struct CSBEntry {
-    u8 flag;
-    //TODO
+    u8 value;
 };
 
 struct CSB {
@@ -54,7 +53,7 @@ struct CSB {
     u16 field_count;
     u16 row_length;
     u32 row_count;
-    CSBEntry entries[field_count];
+    CSBEntry entries[row_count * row_length];
 };
 
 CSB csb @ 0x00;

@@ -31,8 +31,7 @@ impl CriTableHeader {
     }
 
     pub fn read(&mut self) -> bool {
-        if (self.row_index + 1) as u32 >= self.row_count
-        {
+        if self.row_index as u32 >= self.row_count {
             return false;
         }
 
@@ -82,15 +81,17 @@ impl CriTableHeader {
 
         let mut field_index_pointer = 0;
 
+        let mut row_storage_offset = 0;
+
         for field_index in 0..header_field_count {
-            let field_flag = CriFieldFlag::from_bits(binary_reader::u8::read(source, pointer, "")?).unwrap();
+            let field_flag = CriFieldFlag::from_bits(binary_reader::u8::read(source, pointer + field_index_pointer, "")?).unwrap();
+            field_index_pointer += 0x01;
             // Maybe redo as a builder pattern?
             let mut field_name_pointer = 0;
             let mut field_position = 0;
             let mut field_length = 0;
             let mut field_offset = 0;
             // /Maybe redo as a builder pattern?
-            field_index_pointer += 0x01;
 
             if has_flag(field_flag.bits(), CriFieldFlag::Name.bits())
             {
@@ -98,10 +99,32 @@ impl CriTableHeader {
                 field_index_pointer += 0x04;
             }
 
-            println!("{} - {header_string_pool_position} - {field_name_pointer}", pointer + field_index_pointer);
             let field_name = binary_reader::string32::read(source, header_string_pool_position as usize + field_name_pointer as usize, "").unwrap().0;
 
-            let mut row_offset = 0;
+            let type_ = field_flag.clone() & CriFieldFlag::TypeMask;
+
+            if has_flag(field_flag.bits(), CriFieldFlag::RowStorage.bits())
+            {
+                field_offset = row_storage_offset;
+
+                let type_offset =
+                    if type_.contains(CriFieldFlag::Data) { 8 }
+                    else if type_.contains(CriFieldFlag::Double) { 8 }
+                    else if type_.contains(CriFieldFlag::UInt64) { 8 }
+                    else if type_.contains(CriFieldFlag::Int64) { 8 }
+                    else if type_.contains(CriFieldFlag::String) { 4 }
+                    else if type_.contains(CriFieldFlag::Single) { 4 }
+                    else if type_.contains(CriFieldFlag::UInt32) { 4 }
+                    else if type_.contains(CriFieldFlag::Int32) { 4 }
+                    else if type_.contains(CriFieldFlag::UInt16) { 2 }
+                    else if type_.contains(CriFieldFlag::Int16) { 2 }
+                    else if type_.contains(CriFieldFlag::SByte) { 1 }
+                    else if type_.contains(CriFieldFlag::Byte) { 1 }
+                    else { panic!("At the dance floor, {type_:?}") };
+
+                row_storage_offset += type_offset as u32;
+            }
+
             for row_index in 0..header_row_count {
                 let mut row_value = vec![0];
                 if has_flag(field_flag.clone().bits(), CriFieldFlag::DefaultValue.bits()) {
@@ -113,10 +136,9 @@ impl CriTableHeader {
                     }
                     else
                     {
-                        // TODO?
-                        todo!("TODO: #1 {:?}", field_flag);
-                        // Probably a vec<u8>
-                        // field_Value = ReadValue(field.Flag);
+                        // From what I've seen it's always null
+                        // If it doens't work, then add the value read with null fallback
+                        row_value = vec![0];
                     }
                 }
                 // Not even per row, and not even constant value? Then there's no storage.
@@ -129,49 +151,19 @@ impl CriTableHeader {
                 // Row storage, calculate the offset
                 if has_flag(field_flag.bits(), CriFieldFlag::RowStorage.bits())
                 {
-                    field_offset = match fields.get(field_index as usize) {
-                        Some(field) => field.offset,
-                        None => row_offset,
-                    };
-
-                    let type_ = field_flag.clone() & CriFieldFlag::TypeMask;
-
-                    let type_offset =
-                        if type_.contains(CriFieldFlag::Data) { 8 }
-                        else if type_.contains(CriFieldFlag::Double) { 8 }
-                        else if type_.contains(CriFieldFlag::UInt64) { 8 }
-                        else if type_.contains(CriFieldFlag::Int64) { 8 }
-                        else if type_.contains(CriFieldFlag::String) { 4 }
-                        else if type_.contains(CriFieldFlag::Single) { 4 }
-                        else if type_.contains(CriFieldFlag::UInt32) { 4 }
-                        else if type_.contains(CriFieldFlag::Int32) { 4 }
-                        else if type_.contains(CriFieldFlag::UInt16) { 2 }
-                        else if type_.contains(CriFieldFlag::Int16) { 2 }
-                        else if type_.contains(CriFieldFlag::SByte) { 1 }
-                        else if type_.contains(CriFieldFlag::Byte) { 1 }
-                        else { panic!("At the dance floor, {type_:?}") };
-                        
-                    new_pointer_offset += type_offset;
-                    row_offset += type_offset as u32;
-
-                    let value_pointer = CriTableHeader::go_to_value_ptr(None, header_rows_position as usize, header_row_length as usize, row_index as usize, field_offset as usize);                        
+                    let value_pointer = CriTableHeader::go_to_value_ptr(None, header_rows_position as usize, header_row_length as usize, row_index as usize, field_offset as usize);
 
                     row_value = 
                         if type_.contains(CriFieldFlag::Data) {
-                            println!("{field_name}");
-                            println!("data");
                             let position = binary_reader::u32::read(source, value_pointer, &Endianness::Big, "")? as usize;
                             let length = binary_reader::u32::read(source, value_pointer + 0x04, &Endianness::Big, "")? as usize;
                             let start = 0 + position + header_data_pool_position as usize;
-                            println!("{position} {length} {start}");
                             source[start..start + length].to_vec()
                         }
                         else if type_.contains(CriFieldFlag::Double) { todo!("double") }
                         else if type_.contains(CriFieldFlag::UInt64) { binary_reader::u64::read(source, value_pointer, &Endianness::Big, "")?.to_be_bytes().to_vec() }
                         else if type_.contains(CriFieldFlag::Int64) { binary_reader::u64::read(source, value_pointer, &Endianness::Big, "")?.to_be_bytes().to_vec() }
                         else if type_.contains(CriFieldFlag::String) {
-                            println!("{field_name}");
-                            println!("string");
                             let string_pointer = binary_reader::u32::read(source, value_pointer, &Endianness::Big, "")? as usize;
                             let string_pointer = 0 + header_string_pool_position as usize + string_pointer;
                             let string = binary_reader::string::read(source, string_pointer as usize, "")?.0;
@@ -239,12 +231,11 @@ impl CriTableHeader {
             );
         }
 
-        let ptr = CriTableHeader::go_to_value_ptr(Some(0), self.rows_position as usize, self.row_length as usize, self.row_index as usize - 1, self.fields[field_index].offset as usize) + 5;
-        println!("{}", ptr);
+        let ptr = CriTableHeader::go_to_value_ptr(Some(0), self.rows_position as usize, self.row_length as usize, self.row_index - 1, self.fields[field_index].offset as usize);
 
         return (
-            binary_reader::u32::read(source, ptr + 4 as usize, &Endianness::Big, "").unwrap(),
-            0 + self.data_pool_position + binary_reader::u32::read(source, ptr as usize, &Endianness::Big, "").unwrap()
+            binary_reader::u32::read(source, ptr + 4, &Endianness::Big, "").unwrap(),
+            0 + self.data_pool_position + binary_reader::u32::read(source, ptr, &Endianness::Big, "").unwrap()
         )
     }
 }

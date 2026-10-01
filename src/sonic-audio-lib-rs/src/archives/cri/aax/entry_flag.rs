@@ -4,8 +4,8 @@ pub enum CriAaxEntryFlag {
     Loop = 1,
 }
 
-impl From<u32> for CriAaxEntryFlag {
-    fn from(value: u32) -> Self {
+impl From<u8> for CriAaxEntryFlag {
+    fn from(value: u8) -> Self {
         match value {
             0 => CriAaxEntryFlag::Intro,
             1 => CriAaxEntryFlag::Loop,
@@ -14,7 +14,7 @@ impl From<u32> for CriAaxEntryFlag {
     }
 }
 
-impl From<CriAaxEntryFlag> for u32 {
+impl From<CriAaxEntryFlag> for u8 {
     fn from(value: CriAaxEntryFlag) -> Self {
         match value {
             CriAaxEntryFlag::Intro => 0,

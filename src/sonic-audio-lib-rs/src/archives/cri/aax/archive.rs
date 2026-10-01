@@ -10,7 +10,6 @@ pub struct CriAaxArchive {
 }
 
 impl CriAaxArchive {
-
     pub fn read(source: &[u8], pointer: Option<usize>) -> Result<CriAaxArchive, CommonBinaryError> {
         let mut entries = Vec::new();
         let mut reader = CriTableHeader::read_table(source, pointer, [0x40, 0x55, 0x54, 0x46])?;
@@ -32,7 +31,7 @@ impl CriAaxArchive {
         while reader.read() {
             let (length, position) = reader.get_length_and_position(&source, "data");
             entries.push(CriAaxEntry {
-                flag: CriAaxEntryFlag::from(reader.get_field("lpflg").unwrap().to_u32(reader.row_index as usize)?),
+                flag: CriAaxEntryFlag::from(reader.get_field("lpflg").unwrap().to_u8(reader.row_index as usize - 1)?),
                 position,
                 length
             });

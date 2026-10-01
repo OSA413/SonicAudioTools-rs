@@ -39,12 +39,12 @@ impl fmt::Debug for CriTableField {
 }
 
 impl CriTableField {
-
-    pub fn get_convoluted_pointer(RowsPosition: usize, RowLength: usize, rowIndex: usize, fields: &Vec<CriTableField>, fieldIndex: usize) -> usize {
-        0 + RowsPosition + (RowLength * rowIndex) + fields[fieldIndex].offset as usize
+    // Maybe redo in a more rustician/idiomatic way?
+    pub fn to_u8(&self, row_index: usize) -> Result<u8, CommonBinaryError> {
+        // add more checks if the array is really of the value?
+        binary_reader::u8::read(&self.value[row_index], 0, "")
     }
 
-    // Maybe redo in a more rustician/idiomatic way?
     pub fn to_u16(&self, row_index: usize) -> Result<u16, CommonBinaryError> {
         // add more checks if the array is really of the value?
         binary_reader::u16::read(&self.value[row_index], 0, &Endianness::Big, "")
