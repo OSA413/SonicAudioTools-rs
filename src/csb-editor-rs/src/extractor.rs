@@ -27,6 +27,7 @@ pub fn extract_csb(path: &str) {
     };
 
     if extension == "csb" {
+        println!("Detected CSB extension, trying extracting");
         let baseDirectory = path.parent().unwrap();
         let outputDirectoryName = baseDirectory.join(path.file_stem().unwrap());
 
@@ -38,17 +39,14 @@ pub fn extract_csb(path: &str) {
 
         let mut reader = CriTableHeader::read_table(&file_content, Some(0), [0x40, 0x55, 0x54, 0x46]).unwrap();
 
-        println!("{reader:?}");
-
         while reader.read() {
-            println!("{:?}", reader.get_field("name").unwrap().to_string(reader.row_index-1));
             if reader.get_field("name").unwrap().to_string(reader.row_index - 1).unwrap() == "SOUND_ELEMENT" {
                 let table_length_and_position = reader.get_length_and_position(&file_content, "utf");
                 let sdl_source = &file_content[table_length_and_position.1 as usize..table_length_and_position.0 as usize + table_length_and_position.1 as usize];
                 let mut sdlReader = CriTableHeader::read_table(
                     sdl_source,
                     Some(0),
-                    [0x40, 0x55, 0x54, 0x46]
+                    *b"@UTF",
                 ).unwrap();
 
                 while sdlReader.read()
@@ -57,20 +55,18 @@ pub fn extract_csb(path: &str) {
                         panic!("The given CSB file contains an audio file which is not an ADX. Only CSB files with ADXs are supported.");
                     }
 
-                    let streaming = sdlReader.get_field("stmflg").unwrap().to_u8(sdlReader.row_index - 1).unwrap() > 0;
+                    let streaming = sdlReader.get_field("stmflg").unwrap().to_u8(sdlReader.row_index - 1).unwrap() != 0;
 
                     if streaming && found.is_none() {
                         panic!("Cannot find the external .CPK file for this .CSB file. Please ensure that the external .CPK file is stored in the directory where the .CPK file is.");
-                    }
-                    else if streaming && found.is_some() && cpk_archive.is_none()
-                    {
+                    } else if streaming && found.is_some() && cpk_archive.is_none() {
+                        println!("The CSB got a CPK, trying to read it also");
                         cpk_source = Some(fs::read(found.as_ref().unwrap()).unwrap());
-                        cpk_archive = CriCpkArchive::read(&cpk_source.as_ref().unwrap(), 0).ok();
+                        cpk_archive = Some(CriCpkArchive::read(&cpk_source.as_ref().unwrap(), 0).unwrap());
                     }
 
                     let sdlName = sdlReader.get_field("name").unwrap().to_string(sdlReader.row_index - 1).unwrap();
                     let destination_path = outputDirectoryName.join(&sdlName);
-                    println!("{destination_path:?}");
                     create_dir_all(&destination_path).unwrap();
 
                     if streaming {
@@ -113,7 +109,6 @@ pub fn extract_csb(path: &str) {
 
                             let data_start_pointer = table_length_and_position.1 + aaxPosition.1 + entry.position;
 
-                            println!("{:?}", destination_path.join(adx_file_name));
                             fs::write(
                                 destination_path.join(adx_file_name),
                                 &file_content[data_start_pointer as usize..data_start_pointer as usize + entry.length as usize],
@@ -123,5 +118,6 @@ pub fn extract_csb(path: &str) {
                 }
             }
         }
+        println!("Extraction complete!");
     }
 }

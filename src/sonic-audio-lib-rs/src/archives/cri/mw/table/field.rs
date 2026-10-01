@@ -14,30 +14,6 @@ pub struct CriTableField
     pub value: Vec<Vec<u8>>,
 }
 
-impl fmt::Debug for CriTableField {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        #[derive(Debug)]
-        struct CriTableField<'a> {
-            pub flag: &'a CriFieldFlag,
-            pub name: &'a String,
-            pub position: &'a u32,
-            pub length: &'a u32,
-            pub offset: &'a u32, //Is this really needed?
-        }
-
-        let Self {
-            flag,
-            name,
-            position,
-            length,
-            offset,
-            value: _,
-        } = self;
-
-        fmt::Debug::fmt(&CriTableField { flag, name, position, length, offset }, f)
-    }
-}
-
 impl CriTableField {
     // Maybe redo in a more rustician/idiomatic way?
     pub fn to_u8(&self, row_index: usize) -> Result<u8, CommonBinaryError> {

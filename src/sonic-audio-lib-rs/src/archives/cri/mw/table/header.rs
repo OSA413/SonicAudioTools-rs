@@ -4,7 +4,6 @@ use common_binary::{binary_reader, endianness::Endianness, error::CommonBinaryEr
 
 use crate::{archives::cri::mw::table::{field::CriTableField, field_flag::CriFieldFlag, header_encoding_type::CriTableHeaderEncodingType}, has_flag::has_flag};
 
-#[derive(Debug)]
 pub struct CriTableHeader {
     pub length: u32,
     pub unknown_byte: u8,
@@ -26,7 +25,6 @@ impl CriTableHeader {
     }
 
     pub fn go_to_value_ptr(starting_pointer: Option<usize>, rows_position: usize, row_length: usize, row_index: usize, offset: usize) -> usize {
-        println!("{rows_position}, {row_length}, {row_index}, {offset}");
         starting_pointer.unwrap_or(0) + rows_position + (row_length * row_index) + offset
     }
 
@@ -73,11 +71,9 @@ impl CriTableHeader {
         let header_row_length = binary_reader::u16::read(source, starting_pointer + 0x1A, &Endianness::Big, "")?;
         let header_row_count = binary_reader::u32::read(source, starting_pointer + 0x1C, &Endianness::Big, "")?;
 
-        let mut pointer = starting_pointer + 0x20;
+        let pointer = starting_pointer + 0x20;
 
         let mut fields: Vec<CriTableField> = Vec::with_capacity(header_field_count as usize);
-
-        let mut new_pointer_offset = 0;
 
         let mut field_index_pointer = 0;
 
@@ -103,52 +99,65 @@ impl CriTableHeader {
 
             let type_ = field_flag.clone() & CriFieldFlag::TypeMask;
 
+            let type_offset =
+                if type_.contains(CriFieldFlag::Data) { 8 }
+                else if type_.contains(CriFieldFlag::Double) { 8 }
+                else if type_.contains(CriFieldFlag::UInt64) { 8 }
+                else if type_.contains(CriFieldFlag::Int64) { 8 }
+                else if type_.contains(CriFieldFlag::String) { 4 }
+                else if type_.contains(CriFieldFlag::Single) { 4 }
+                else if type_.contains(CriFieldFlag::UInt32) { 4 }
+                else if type_.contains(CriFieldFlag::Int32) { 4 }
+                else if type_.contains(CriFieldFlag::UInt16) { 2 }
+                else if type_.contains(CriFieldFlag::Int16) { 2 }
+                else if type_.contains(CriFieldFlag::SByte) { 1 }
+                else if type_.contains(CriFieldFlag::Byte) { 1 }
+                else { panic!("At the dance floor, {type_:?}") };
+
+            // This value is shared between all default rows...
+            let mut field_default_value = Vec::new();
+
+            if has_flag(field_flag.bits(), CriFieldFlag::DefaultValue.bits())
+            {
+                if has_flag(field_flag.bits(), CriFieldFlag::Data.bits())
+                {
+                    field_position = binary_reader::u32::read(source, pointer + field_index_pointer, &Endianness::Big, "")?;
+                    field_length = binary_reader::u32::read(source, pointer + field_index_pointer + 0x4, &Endianness::Big, "")?;
+                    field_index_pointer += 0x08;
+                }
+                else
+                {
+                    field_default_value =
+                        if type_.contains(CriFieldFlag::Double) { todo!("double") }
+                        else if type_.contains(CriFieldFlag::UInt64) { binary_reader::u64::read(source, pointer + field_index_pointer, &Endianness::Big, "")?.to_be_bytes().to_vec() }
+                        else if type_.contains(CriFieldFlag::Int64) { binary_reader::u64::read(source, pointer + field_index_pointer, &Endianness::Big, "")?.to_be_bytes().to_vec() }
+                        else if type_.contains(CriFieldFlag::String) {
+                            let string_pointer = binary_reader::u32::read(source, pointer + field_index_pointer, &Endianness::Big, "")? as usize;
+                            let string_pointer = 0 + header_string_pool_position as usize + string_pointer;
+                            let string = binary_reader::string::read(source, string_pointer, "")?.0;
+                            [string.as_bytes(), &[0]].concat().to_vec()
+                        }
+                        else if type_.contains(CriFieldFlag::Single) { todo!("single") }
+                        else if type_.contains(CriFieldFlag::UInt32) { binary_reader::u32::read(source, pointer + field_index_pointer, &Endianness::Big, "")?.to_be_bytes().to_vec() }
+                        else if type_.contains(CriFieldFlag::Int32) { binary_reader::u32::read(source, pointer + field_index_pointer, &Endianness::Big, "")?.to_be_bytes().to_vec() }
+                        else if type_.contains(CriFieldFlag::UInt16) { binary_reader::u16::read(source, pointer + field_index_pointer, &Endianness::Big, "")?.to_be_bytes().to_vec() }
+                        else if type_.contains(CriFieldFlag::Int16) { binary_reader::u16::read(source, pointer + field_index_pointer, &Endianness::Big, "")?.to_be_bytes().to_vec() }
+                        else if type_.contains(CriFieldFlag::SByte) { vec![binary_reader::u8::read(source, pointer + field_index_pointer, "")?] }
+                        else if type_.contains(CriFieldFlag::Byte) { vec![binary_reader::u8::read(source, pointer + field_index_pointer, "")?] }
+                        else { panic!("At the dance floor, {type_:?}") };
+
+                    field_index_pointer += type_offset;
+                }
+            }
+
             if has_flag(field_flag.bits(), CriFieldFlag::RowStorage.bits())
             {
                 field_offset = row_storage_offset;
-
-                let type_offset =
-                    if type_.contains(CriFieldFlag::Data) { 8 }
-                    else if type_.contains(CriFieldFlag::Double) { 8 }
-                    else if type_.contains(CriFieldFlag::UInt64) { 8 }
-                    else if type_.contains(CriFieldFlag::Int64) { 8 }
-                    else if type_.contains(CriFieldFlag::String) { 4 }
-                    else if type_.contains(CriFieldFlag::Single) { 4 }
-                    else if type_.contains(CriFieldFlag::UInt32) { 4 }
-                    else if type_.contains(CriFieldFlag::Int32) { 4 }
-                    else if type_.contains(CriFieldFlag::UInt16) { 2 }
-                    else if type_.contains(CriFieldFlag::Int16) { 2 }
-                    else if type_.contains(CriFieldFlag::SByte) { 1 }
-                    else if type_.contains(CriFieldFlag::Byte) { 1 }
-                    else { panic!("At the dance floor, {type_:?}") };
-
                 row_storage_offset += type_offset as u32;
             }
 
             for row_index in 0..header_row_count {
                 let mut row_value = vec![0];
-                if has_flag(field_flag.clone().bits(), CriFieldFlag::DefaultValue.bits()) {
-                    if has_flag(field_flag.bits(), CriFieldFlag::Data.bits()) {
-                        field_position = binary_reader::u32::read(source, pointer + new_pointer_offset, &Endianness::Big, "")?;
-                        field_length = binary_reader::u32::read(source, pointer + new_pointer_offset + 0x4, &Endianness::Big, "")?;
-                        new_pointer_offset += 0x08;
-                        todo!("This path wasn't tested");
-                    }
-                    else
-                    {
-                        // From what I've seen it's always null
-                        // If it doens't work, then add the value read with null fallback
-                        row_value = vec![0];
-                    }
-                }
-                // Not even per row, and not even constant value? Then there's no storage.
-                else if !has_flag(field_flag.bits(), CriFieldFlag::RowStorage.bits())
-                    && !has_flag(field_flag.bits(), CriFieldFlag::DefaultValue.bits())
-                {
-                    row_value = vec![0];
-                }
-
-                // Row storage, calculate the offset
                 if has_flag(field_flag.bits(), CriFieldFlag::RowStorage.bits())
                 {
                     let value_pointer = CriTableHeader::go_to_value_ptr(None, header_rows_position as usize, header_row_length as usize, row_index as usize, field_offset as usize);
@@ -177,6 +186,11 @@ impl CriTableHeader {
                         else if type_.contains(CriFieldFlag::SByte) { vec![source[value_pointer]] }
                         else if type_.contains(CriFieldFlag::Byte) { vec![source[value_pointer]] }
                         else { panic!("After the dance floor, {type_:?}") };
+                }
+                else if has_flag(field_flag.bits(), CriFieldFlag::DefaultValue.bits())
+                    && !has_flag(field_flag.bits(), CriFieldFlag::Data.bits())
+                {
+                    row_value = field_default_value.clone();
                 }
 
                 if fields.len() <= field_index as usize {

@@ -1,5 +1,5 @@
 use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
-use common_binary::error::CommonBinaryError;
+use common_binary::{binary_reader, endianness::Endianness, error::CommonBinaryError};
 
 use crate::archives::cri::{cpk::{entry::CriCpkEntry, mode::CriCpkMode}, mw::table::header::CriTableHeader};
 
@@ -13,13 +13,26 @@ pub struct CriCpkArchive
 }
 
 impl CriCpkArchive {
+    fn get_section_pointer(source: &[u8], position: usize, expected_signature: [u8; 4]) -> Result<usize, CommonBinaryError> {
+        if !source[position..position + 4].eq(&expected_signature) {
+            eprintln!("Invalid signature");
+            return Err(CommonBinaryError::SeeConsole());
+        }
+
+        // In the original C# project there's a read of signature, flag, tableLength, and the "unknown", each u32;
+        // Those values don't seem to be used, but the signature check looks very helpfull (anyway, that's what the original does)
+
+        Ok(position + 0x10)
+    }
+
     pub fn read(source: &[u8], pointer: usize) -> Result<CriCpkArchive, CommonBinaryError> {
-        let mut reader = CriTableHeader::read_table(source, Some(pointer), *b"CPK ")?;
+        let cpk_section_pointer = CriCpkArchive::get_section_pointer(source, pointer, *b"CPK ")?;
+        let mut reader = CriTableHeader::read_table(source, Some(cpk_section_pointer), *b"@UTF")?;
         reader.read();
 
         let (mode, is_latest_version) = match reader.get_field("CpkMode") {
             Some(is_latest_version) => {
-                (CriCpkMode::from(is_latest_version.to_u32(reader.row_index - 1)?), true)
+                (CriCpkMode::from(is_latest_version.to_u32(reader.row_index - 1).unwrap()), true)
             }
             None => {
                 let tocEnabled = reader.get_field("TocOffset").is_some_and(|x| x.to_u64(reader.row_index - 1).unwrap() > 0);
@@ -50,25 +63,27 @@ impl CriCpkArchive {
 
         // Why is this u64?
         let tocPosition = reader.get_field("TocOffset").unwrap().to_u64(reader.row_index - 1)?;
-        let itocPosition = reader.get_field("ItocOffset").unwrap().to_u64(reader.row_index - 1)?;
-        let etocPosition = reader.get_field("EtocOffset").unwrap().to_u64(reader.row_index - 1)?;
+        // let itocPosition = reader.get_field("ItocOffset").unwrap().to_u64(reader.row_index - 1)?;
+        // let etocPosition = reader.get_field("EtocOffset").unwrap().to_u64(reader.row_index - 1)?;
         let contentPosition = reader.get_field("ContentOffset").unwrap().to_u64(reader.row_index - 1)?;
 
-        let align = reader.get_field("Align").unwrap().to_u16(reader.row_index - 1)?;
+        // let align = reader.get_field("Align").unwrap().to_u16(reader.row_index - 1)?;
 
         let mut entries = vec![];
 
-        if mode == CriCpkMode::FileName || mode == CriCpkMode::FileNameAndId
-        {            
-            let mut tocReader = CriTableHeader::read_table(source, Some(tocPosition as usize), *b"TOC ")?;
-            let mut etocReader = CriTableHeader::read_table(source, Some(etocPosition as usize), *b"ETOC")?;
+        if mode == CriCpkMode::FileName
+        {
+            let toc_section_pointer = CriCpkArchive::get_section_pointer(source, tocPosition as usize, *b"TOC ")?;
+            let mut tocReader = CriTableHeader::read_table(source, Some(toc_section_pointer), *b"@UTF")?;
+            // let etoc_section_pointer = CriCpkArchive::get_section_pointer(source, etocPosition as usize, *b"ETOC")?;
+            // let mut etocReader = CriTableHeader::read_table(source, Some(etoc_section_pointer), *b"@UTF")?;
 
             while tocReader.read() {
                 let mut entry = CriCpkEntry {
                     directory_name: tocReader.get_field("DirName").unwrap().to_string(tocReader.row_index - 1)?,
                     name: tocReader.get_field("FileName").unwrap().to_string(tocReader.row_index - 1)?,
                     length: tocReader.get_field("FileSize").unwrap().to_u32(tocReader.row_index - 1)?,
-                    position: tocReader.get_field("FileOffset").unwrap().to_u32(tocReader.row_index - 1)?,
+                    position: tocReader.get_field("FileOffset").unwrap().to_u64(tocReader.row_index - 1)? as u32,
                     id: match is_latest_version {
                         true => tocReader.get_field("ID").unwrap().to_u32(tocReader.row_index - 1)?,
                         false => tocReader.get_field("Info").unwrap().to_u32(tocReader.row_index - 1)?,
@@ -94,72 +109,6 @@ impl CriCpkArchive {
 
                 entries.push(entry);
             }
-
-            if mode == CriCpkMode::FileNameAndId && is_latest_version
-            {
-                todo!("flooring the dance panic");
-                // using (CriTableReader itocReader = CriCpkSection.Open(source, itocPosition, "ITOC"))
-                // {
-                //     while (itocReader.Read())
-                //     {
-                //         entries[itocReader.GetInt32("TocIndex")].Id = (uint)itocReader.GetInt32("ID");
-                //     }
-                // }
-            }
-        } else if mode == CriCpkMode::Id {
-            todo!("working working working")
-            // using (CriTableReader itocReader = CriCpkSection.Open(source, itocPosition, "ITOC"))
-            // {
-            //     while (itocReader.Read())
-            //     {
-            //         if (itocReader.GetUInt32("FilesL") > 0)
-            //         {
-            //             using (CriTableReader dataReader = itocReader.GetTableReader("DataL"))
-            //             {
-            //                 while (dataReader.Read())
-            //                 {
-            //                     CriCpkEntry entry = new CriCpkEntry
-            //                     {
-            //                         Id = dataReader.GetUInt16("ID"),
-            //                         Length = dataReader.GetUInt16("FileSize"),
-            //                         UncompressedLength = dataReader.GetUInt16("ExtractSize")
-            //                     };
-            //                     entry.IsCompressed = entry.Length != entry.UncompressedLength;
-
-            //                     entries.Add(entry);
-            //                 }
-            //             }
-            //         }
-
-            //         if (itocReader.GetUInt32("FilesH") > 0)
-            //         {
-            //             using (CriTableReader dataReader = itocReader.GetTableReader("DataH"))
-            //             {
-            //                 while (dataReader.Read())
-            //                 {
-            //                     CriCpkEntry entry = new CriCpkEntry
-            //                     {
-            //                         Id = dataReader.GetUInt16("ID"),
-            //                         Length = dataReader.GetUInt32("FileSize"),
-            //                         UncompressedLength = dataReader.GetUInt32("ExtractSize")
-            //                     };
-            //                     entry.IsCompressed = entry.Length != entry.UncompressedLength;
-
-            //                     entries.Add(entry);
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
-
-            // long entryPosition = contentPosition;
-            // foreach (CriCpkEntry entry in entries.OrderBy(entry => entry.Id))
-            // {
-            //     entryPosition = Helpers.Align(entryPosition, align);
-
-            //     entry.Position = entryPosition;
-            //     entryPosition += entry.Length;
-            // }
         } else {
             eprintln!("Unimplemented CPK mode ({mode:?})");
             return Err(CommonBinaryError::SeeConsole());
@@ -176,7 +125,7 @@ impl CriCpkArchive {
         return self.entries.iter().find(|entry| {
             let search = match entry.directory_name.is_empty() {
                 true => entry.name.clone(),
-                false => format!("{}{}", entry.directory_name.replace("\\", "/"), entry.name),
+                false => format!("{}/{}", entry.directory_name.replace("\\", "/"), entry.name),
             };
 
             return search == corrected_path;

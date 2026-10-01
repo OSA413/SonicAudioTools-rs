@@ -8,6 +8,7 @@ A set of tools to modify CRIWARE file formats.
 * parallel processing of CSB files since it would still hit the IO bottleneck.
 * file alignment in CPK since it wasn't implemented in the original code.
 * also the masking seems to be unused in CPK (always `false`)
+* ahead-of-time values loading was implemented instead of lazy-loading (I mean the file is read fully in one iteration instead of jumping on the stream in the memory between the pointers and values)
 
 ## Disclaimer
 
