@@ -2,63 +2,32 @@
 
 A set of tools to modify CRIWARE file formats.
 
+Currently it only supports CSB files (that can be bundled with a CPK file).
+
 ## What is left behind / will not be implemented in the Rust rewrite
 
-* probably the compression of CPK files, since in the original code the reading was only implemented, but I want to write the files as well.
-* parallel processing of CSB files since it would still hit the IO bottleneck.
-* file alignment in CPK since it wasn't implemented in the original code.
-* also the masking seems to be unused in CPK (always `false`)
+* Only CSB/CPK files are supported
+* the compression of files, since in the original code the reading was only implemented, but I want to write the files as well.
+* parallel processing of files since it would still hit the IO bottleneck (original project has a parallel extractor of the files).
+* file alignment since it wasn't implemented in the original code.
+* also the masking seems to be unused (always `false`)
 * ahead-of-time values loading was implemented instead of lazy-loading (I mean the file is read fully in one iteration instead of jumping on the stream in the memory between the pointers and values)
 
-## Disclaimer
+## Tested games
 
-This project is no longer maintained. I have not done any significant development for several years, and do not have any plans to do so. However, if you wish to contribute to the project, I'm open to accepting pull requests.
+* Sonic 4 Episode 1 (read/extraction)
+* Sonic 4 Episode 2 (read/extraction)
 
-## Releases
+## Want to contribute?
 
-You can get the latest development builds on the [AppVeyor page.](https://ci.appveyor.com/project/blueskythlikesclouds/sonicaudiotools/build/artifacts)  
-Stable builds are published on the [Releases page.](https://github.com/blueskythlikesclouds/SonicAudioTools/releases)
+Contributions welcome to the Rust rewrite.
 
-## Building
+If you want to contribute to the original C# project, please follow the original project's repository.
 
-If you still wish to build the solution yourself, do as follows:
+## Wiki of the original project
 
-1. Clone from [GitHub](https://github.com/blueskythlikesclouds/SonicAudioTools.git) `git clone https://github.com/blueskythlikesclouds/SonicAudioTools.git`
-2. Open the solution in Visual Studio. (Visual Studio 2017 or later is required.)
-3. Install the missing NuGet packages.
-4. Build the solution.
+If you wish to understand what's going on with the file formats, visit the [wiki](https://github.com/blueskythlikesclouds/SonicAudioTools/wiki) page.
 
-## Projects
+## Special thanks
 
-If you wish to see more detailed information about the projects, visit the [wiki](https://github.com/blueskythlikesclouds/SonicAudioTools/wiki) page.
-
-### [Sonic Audio Library](https://github.com/blueskythlikesclouds/SonicAudioTools/tree/master/Source/SonicAudioLib)
-
-This is the main library of the solution.  Contains classes for IO and file formats.
-
-### [ACB Editor](https://github.com/blueskythlikesclouds/SonicAudioTools/tree/master/Source/AcbEditor)
-
-This tool allows you to edit the audio content of an ACB file.  
-
-### [ACB Finder](https://github.com/blueskythlikesclouds/SonicAudioTools/tree/master/Source/AcbFinder)
-
-This tool allows you to find AWB files and link them back to the ACB, required in extracting certain ACB files.
-Useful for games where the AWB files may be renamed or hidden (like Phantasy Star Online 2)
-
-### [ACB Injector](https://github.com/blueskythlikesclouds/SonicAudioTools/tree/master/Source/AcbInjector)
-
-This tool allows you to inject audio file directly into ACB without repacking its AWB.  
-Useful for background music ACBs that use huge AWB files.
-
-### [CSB Builder](https://github.com/blueskythlikesclouds/SonicAudioTools/tree/master/Source/CsbBuilder)
-
-This tool allows you to create or edit CSB files. You can do things like adding/removing cues, editing real-time sound parameters, and more.
-
-### [CSB Editor](https://github.com/blueskythlikesclouds/SonicAudioTools/tree/master/Source/CsbEditor)
-
-This tool allows you to edit the audio content of a CSB file.  
-It works like ACB Editor, and it is a lot simpler to use than CSB Builder.
-
-## License
-
-See [LICENSE.md](https://github.com/blueskythlikesclouds/SonicAudioTools/blob/master/LICENSE.md) for details.
+Special thanks to [Skyth](https://github.com/blueskythlikesclouds) for the original C# tools and for licensing them under the MIT license.
