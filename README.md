@@ -32,3 +32,11 @@ If you wish to understand what's going on with the file formats, visit the [wiki
 ## Special thanks
 
 Special thanks to [Skyth](https://github.com/blueskythlikesclouds) for the original C# tools and for licensing them under the MIT license.
+
+## AI disclosure and usage policy and contribution guide (for the rewritten project)
+
+The word "slop" is not what I want to achieve with this project, so I prepared an [AI usage policy and contribution guide](./AI_USAGE_POLICY_AND_CONTRIBUTION_GUIDE.md).
+
+Currently, AI assistance from SourceCraft Code Assistant helped in a few ways:
+
+* Helped debugging the rewritten library and tools in the cases that I overlooked due to inattention.
