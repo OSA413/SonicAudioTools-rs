@@ -15,8 +15,9 @@ Currently it only supports CSB files (that can be bundled with a CPK file).
 
 ## Tested games
 
-* Sonic 4 Episode 1 (read/extraction)
-* Sonic 4 Episode 2 (read/extraction)
+* Sonic 4 Episode 1 (PC) (read/extraction)
+* Sonic 4 Episode 2 (PC) (read/extraction)
+* Sonic Generations (PC) (read/extraction)
 
 ## Want to contribute?
 

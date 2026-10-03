@@ -1,5 +1,5 @@
 [package]
-name = "sonic-audio-lib-rs"
+name = "csb2json"
 description = "TODO"
 version = "0.1.0"
 edition = "2024"
@@ -9,9 +9,8 @@ homepage = "https://github.com/OSA413/SonicAudioTools-rs"
 license = "MIT"
 
 [dependencies]
+sonic-audio-lib-rs = { path = "../sonic-audio-lib-rs" }
 common_binary = { path = "../../src_tools/src/common/binary" }
-chrono = { version = "0.4.45", default-features = false }
-bitflags = { version = "2.13.2" }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = { version = "1.0.151" }
 

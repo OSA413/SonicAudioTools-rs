@@ -38,8 +38,8 @@ impl CriAaxArchive {
         }
 
         Ok(CriAaxArchive {
-            mode: mode,
-            entries: entries
+            mode,
+            entries,
         })
     }
 

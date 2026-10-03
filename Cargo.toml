@@ -1,7 +1,9 @@
 [workspace]
 members = [
     "src/sonic-audio-lib-rs",
-    "src/csb-editor-rs"
+    "src/csb-lib",
+    "src/csb-editor-rs",
+    "src/csb2json",
 ]
 resolver = "3"
 

@@ -15,6 +15,7 @@ pub mod archives {
         pub mod mw {
             pub mod table {
                 pub mod field_flag;
+                pub mod field_value;
                 pub mod field;
                 pub mod header_encoding_type;
                 pub mod header;
